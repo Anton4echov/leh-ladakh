@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Игра - Кто в Лех, кто по дрова?</title>
+  <meta name="description" content="Игра от сообщества русскоязычных путешественников в Гималаях, Тибете и Ладаке." />
+  <meta property="og:image" content="https://cdn.glitch.global/bea12857-f511-461d-adbc-da5b46687f87/IMG_20231118_212542_728.jpg?v=1750048499482">
+  <link rel="icon" href="IMG_20231118_212542_728.ico" type="image/x-icon">
+  <style>
+    html {
+      overflow-x: hidden;  
+    }
+    
+    body {
+      overflow-x: hidden;  
+      margin: 0;
+      font-family: 'Lora', serif;
+      color: #fff;
+      background: url('https://cdn.glitch.global/bea12857-f511-461d-adbc-da5b46687f87/IMG_20231118_212542_728.jpg?v=1750048499482') no-repeat center center fixed;
+      background-size: cover;
+      line-height: 1.6;
+    }
+    header {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+    h2, p {
+      text-align: center;
+    }
+    main {
+      background: rgba(0, 0, 0, 0.5);
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    
+    .game-container {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      margin: 20px auto;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+    
+    #canvas1 {
+      width: 100%;
+      height: 100%;
+      background: rgb(122, 122, 177);
+    }
+    
+    .admin-link-leh {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #00b2ff;
+      text-decoration: none;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .admin-link-leh svg{
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+      fill: #00b2ff;
+    }
+    
+    a {
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.1em;
+      padding: 10px 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
+      transition: background 0.3s ease;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 10px;
+      color: black;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Игра от сообщества "Кто в Лех, кто по дрова?"</h1><br>
+    <a href="https://t.me/leh_ladak" class="admin-link-leh" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.371 0 0 5.371 0 12s5.371 12 12 12 12-5.371 12-12S18.629 0 12 0zm5.963 7.57l-1.79 8.427c-.135.582-.485.726-1.008.452l-2.792-2.063-1.346 1.296c-.148.147-.271.271-.555.271l.2-2.869 5.217-4.71c.226-.2-.05-.312-.35-.112l-6.453 4.063-2.773-.865c-.602-.185-.613-.602.127-.89l10.843-4.18c.503-.185.944.112.783.883z"/></svg>
+      Наш Telegram-канал
+    </a>
+    <a href="../index.html" class="admin-link-leh" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.371 0 0 5.371 0 12s5.371 12 12 12 12-5.371 12-12S18.629 0 12 0zm5.963 7.57l-1.79 8.427c-.135.582-.485.726-1.008.452l-2.792-2.063-1.346 1.296c-.148.147-.271.271-.555.271l.2-2.869 5.217-4.71c.226-.2-.05-.312-.35-.112l-6.453 4.063-2.773-.865c-.602-.185-.613-.602.127-.89l10.843-4.18c.503-.185.944.112.783.883z"/></svg>
+      На главную
+    </a>
+  </header>
+  
+  <main>
+    <section>
+      <h2>Приключение в Гималаях</h2>
+      <p>Попробуйте нашу игру, созданную с любовью к горам и путешествиям!</p>
+      
+      <div class="game-container">
+        <canvas id="canvas1"></canvas>
+      </div>
+      
+      <p>Управление: используйте клавиши со стрелками или WASD для перемещения персонажа.</p>
+    </section>
+  </main>
+  
+  <footer>
+    &copy; 2025 Кто в Лех, кто по дрова?
+  </footer>
+  
+  <!-- Game assets (hidden) -->
+  <img id="layer1" src="https://cdn.glitch.global/bea12857-f511-461d-adbc-da5b46687f87/layer-1.png?v=1750070000000" style="display:none;">
+  <img id="layer2" src="https://cdn.glitch.global/bea12857-f511-461d-adbc-da5b46687f87/layer-2.png?v=1750070000000" style="display:none;">
+  <img id="layer3" src="https://cdn.glitch.global/bea12857-f511-461d-adbc-da5b46687f87/layer-3.png?v=1750070000000" style="display:none;">
+  <img id="layer4" src="https://cdn.glitch.global/bea12857-f511-461d-adbc-da5b46687f87/layer-4.png?v=1750070000000" style="display:none;">
+  <img id="player" src="https://cdn.glitch.global/bea12857-f511-461d-adbc-da5b46687f87/player.png?v=1750070000000" style="display:none;">
+  
+  <script>
+    // Game canvas setup
+    const canvas = document.getElementById('canvas1');
+    const ctx = canvas.getContext('2d');
+    canvas.width = document.querySelector('.game-container').offsetWidth;
+    canvas.height = 500;
+
+    // Game variables
+    let gameSpeed = 5;
+    
+    // Background layers
+    const layer1 = document.getElementById('layer1');
+    const layer2 = document.getElementById('layer2');
+    const layer3 = document.getElementById('layer3');
+    const layer4 = document.getElementById('layer4');
+    const playerImage = document.getElementById('player');
+    
+    // Game objects
+    class Layer {
+      constructor(image, speedModifier) {
+        this.x = 0;
+        this.y = 0;
+        this.width = 2400;
+        this.height = 700;
+        this.image = image;
+        this.speedModifier = speedModifier;
+        this.speed = gameSpeed * this.speedModifier;
+      }
+      update() {
+        this.speed = gameSpeed * this.speedModifier;
+        if (this.x <= -this.width) {
+          this.x = 0;
+        }
+        this.x = Math.floor(this.x - this.speed);
+      }
+      draw() {
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        ctx.drawImage(this.image, this.x + this.width, this.y, this.width, this.height);
+      }
+    }
+    
+    class Player {
+      constructor() {
+        this.x = 100;
+        this.y = 300;
+        this.width = 100;
+        this.height = 100;
+        this.frameX = 0;
+        this.frameY = 0;
+        this.speed = 5;
+        this.moving = false;
+      }
+      update() {
+        // Handle keyboard input
+        if (keys['ArrowUp'] || keys['w']) {
+          this.y -= this.speed;
+          this.frameY = 3;
+          this.moving = true;
+        }
+        if (keys['ArrowDown'] || keys['s']) {
+          this.y += this.speed;
+          this.frameY = 0;
+          this.moving = true;
+        }
+        if (keys['ArrowLeft'] || keys['a']) {
+          this.x -= this.speed;
+          this.frameY = 1;
+          this.moving = true;
+        }
+        if (keys['ArrowRight'] || keys['d']) {
+          this.x += this.speed;
+          this.frameY = 2;
+          this.moving = true;
+        }
+        
+        // Boundary checks
+        if (this.y < 0) this.y = 0;
+        if (this.y > canvas.height - this.height) this.y = canvas.height - this.height;
+        if (this.x < 0) this.x = 0;
+        if (this.x > canvas.width - this.width) this.x = canvas.width - this.width;
+        
+        // Animation frame
+        if (this.moving) {
+          if (gameFrame % 10 === 0) {
+            this.frameX = (this.frameX + 1) % 4;
+          }
+        } else {
+          this.frameX = 0;
+        }
+        this.moving = false;
+      }
+      draw() {
+        ctx.drawImage(
+          playerImage,
+          this.frameX * this.width,
+          this.frameY * this.height,
+          this.width,
+          this.height,
+          this.x,
+          this.y,
+          this.width,
+          this.height
+        );
+      }
+    }
+    
+    // Initialize game objects
+    const layer1Obj = new Layer(layer1, 0.2);
+    const layer2Obj = new Layer(layer2, 0.4);
+    const layer3Obj = new Layer(layer3, 0.6);
+    const layer4Obj = new Layer(layer4, 0.8);
+    const player = new Player();
+    
+    // Keyboard input handling
+    const keys = {};
+    window.addEventListener('keydown', function(e) {
+      keys[e.key] = true;
+    });
+    window.addEventListener('keyup', function(e) {
+      keys[e.key] = false;
+    });
+    
+    // Animation loop
+    let gameFrame = 0;
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      layer1Obj.update();
+      layer2Obj.update();
+      layer3Obj.update();
+      layer4Obj.update();
+      
+      layer1Obj.draw();
+      layer2Obj.draw();
+      layer3Obj.draw();
+      layer4Obj.draw();
+      
+      player.update();
+      player.draw();
+      
+      gameFrame++;
+      requestAnimationFrame(animate);
+    }
+    
+    // Start the game when all assets are loaded
+    window.onload = function() {
+      animate();
+    };
+  </script>
+</body>
+</html>
