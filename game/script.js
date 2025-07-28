@@ -62,45 +62,69 @@ window.addEventListener('load', function(){
       }
     }  
   
-    class InputHandler {
-       constructor(game){
-         this.game = game;
-         window.addEventListener('keydown',e=>{
-           if ( ((e.key === 'ArrowUp') ||
-                 (e.key === 'ArrowDown') ||
-                 (e.key === 'ArrowLeft') ||
-                 (e.key === 'ArrowRight')) 
-               &&
-                 (this.game.keys.indexOf(e.key) === -1)){
-                    this.game.keys.push(e.key);
-           }
-         });
-         window.addEventListener('keyup',e=>{
-           if (this.game.keys.indexOf(e.key) > -1) {
-             this.game.keys.splice(this.game.keys.indexOf(e.key),1);
-             //console.log(this.game.keys);
-           }
-         });
-
-         
-         window.addEventListener('touchstart',e => {
-           this.game.touchStartY = e.touches[0].clientY;
-           this.game.touchStartX = e.touches[0].clientX;
-           this.game.isSliding = true;
-         });
-         window.addEventListener('touchmove',e => {
-           const currentY = e.touches[0].clientY;
-           const currentX = e.touches[0].clientX;
-           this.game.touchDeltaY = currentY - this.game.touchStartY;
-           this.game.touchDeltaX = currentX - this.game.touchStartX;
-         });
-         window.addEventListener('touchend', e => {
-           this.game.isSliding = false;
-         });  
-
-       }
-    }
+class InputHandler {
+  constructor(game) {
+    this.game = game;
+    this.touchId = null; // Для отслеживания конкретного касания
+    this.touchThreshold = 10; // Порог чувствительности для определения свайпа
     
+    // Клавиатура
+    window.addEventListener('keydown', e => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
+          !this.game.keys.includes(e.key)) {
+        this.game.keys.push(e.key);
+      }
+    });
+    
+    window.addEventListener('keyup', e => {
+      const index = this.game.keys.indexOf(e.key);
+      if (index > -1) {
+        this.game.keys.splice(index, 1);
+      }
+    });
+
+    // Тачскрин управление
+    window.addEventListener('touchstart', e => {
+      if (this.touchId === null) { // Обрабатываем только первое касание
+        const touch = e.touches[0];
+        this.touchId = touch.identifier;
+        this.game.touchStartX = touch.clientX;
+        this.game.touchStartY = touch.clientY;
+        this.game.isTouching = true;
+      }
+    });
+
+    window.addEventListener('touchmove', e => {
+      if (!this.game.isTouching) return;
+      
+      const touch = Array.from(e.touches).find(t => t.identifier === this.touchId);
+      if (!touch) return;
+      
+      const currentX = touch.clientX;
+      const currentY = touch.clientY;
+      
+      this.game.touchDeltaX = currentX - this.game.touchStartX;
+      this.game.touchDeltaY = currentY - this.game.touchStartY;
+      
+      // Определение направления свайпа
+      if (Math.abs(this.game.touchDeltaX) > this.touchThreshold || 
+          Math.abs(this.game.touchDeltaY) > this.touchThreshold) {
+        this.game.isSliding = true;
+      }
+    });
+
+    window.addEventListener('touchend', e => {
+      const touch = Array.from(e.changedTouches).find(t => t.identifier === this.touchId);
+      if (touch) {
+        this.game.isTouching = false;
+        this.game.isSliding = false;
+        this.touchId = null;
+        this.game.touchDeltaX = 0;
+        this.game.touchDeltaY = 0;
+      }
+    });
+  }
+}    
     class Player{
       constructor (game){
         this.game = game;
