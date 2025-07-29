@@ -81,10 +81,8 @@ class Cow {
         // this.width = 150 * this.sizeModifier;
         // this.height = 120 * this.sizeModifier;
         
-        // this.x = this.game.width;
-        // this.y = this.game.height - this.height - 100;
-        this.x = 30;
-        this.y = 337;    
+        this.x = this.game.width;
+        this.y = this.game.height - this.height - 100;
         this.speed = Math.random() * 2 + 1;
         this.markedForDeletion = false;
         this.frameX = 0;
