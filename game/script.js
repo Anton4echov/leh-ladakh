@@ -294,7 +294,7 @@ class InputHandler {
         this.touchDeltaX = 0;
       }
       update(){
-  
+        this.input.update();
         this.background.layer4.update();
         this.player.update();
         this.background.update();
