@@ -312,17 +312,16 @@ class Cow {
                 this.maxSpeed = 5;
                 this.acceleration = 0.2;
                 this.deceleration = 0.1;
-                const canvas = document.getElementById('canvas1');
 
                 // Keyboard controls
-                canvas.addEventListener('keydown', e => {
+                window.addEventListener('keydown', e => {
                     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
                         !this.game.keys.includes(e.key)) {
                         this.game.keys.push(e.key);
                     }
                 });
                 
-                canvas.addEventListener('keyup', e => {
+                window.addEventListener('keyup', e => {
                     const index = this.game.keys.indexOf(e.key);
                     if (index > -1) {
                         this.game.keys.splice(index, 1);
@@ -330,7 +329,7 @@ class Cow {
                 });
 
                 // Touch controls
-                canvas.addEventListener('touchstart', e => {
+                window.addEventListener('touchstart', e => {
                     if (this.touchId === null) {
                         const touch = e.touches[0];
                         this.touchId = touch.identifier;
@@ -344,7 +343,7 @@ class Cow {
                     }
                 });
 
-                canvas.addEventListener('touchmove', e => {
+                window.addEventListener('touchmove', e => {
                     if (!this.game.isTouching) return;
                     
                     const touch = Array.from(e.touches).find(t => t.identifier === this.touchId);
@@ -387,7 +386,7 @@ class Cow {
                     this.game.touchDeltaX = this.game.touchVelocityX;
                 });
 
-                canvas.addEventListener('touchend', e => {
+                window.addEventListener('touchend', e => {
                     const touch = Array.from(e.changedTouches).find(t => t.identifier === this.touchId);
                     if (touch) {
                         this.game.isTouching = false;
