@@ -73,8 +73,8 @@ class Cow {
         this.spriteHeight = 679;
         
         // Scaled display size (150x120)
-        this.width = 150;
-        this.height = 120;
+        this.width = 100;
+        this.height = 80;
         
         // Alternative random sizing (commented out)
         // this.sizeModifier = Math.random() * 0.3 + 0.7; // 0.7 to 1.0
@@ -82,7 +82,7 @@ class Cow {
         // this.height = 120 * this.sizeModifier;
         
         this.x = this.game.width;
-        this.y = this.game.height - this.height - 20;
+        this.y = this.game.height - this.height - 100;
         this.speed = Math.random() * 2 + 1;
         this.markedForDeletion = false;
         this.frameX = 0;
