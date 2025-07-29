@@ -65,10 +65,13 @@ window.addEventListener('load', function(){
 class InputHandler {
   constructor(game) {
     this.game = game;
-    this.touchId = null; // Для отслеживания конкретного касания
-    this.touchThreshold = 10; // Порог чувствительности для определения свайпа
+    this.touchId = null;
+    this.touchThreshold = 10;
+    this.maxSpeed = 5; // Maximum vertical speed
+    this.acceleration = 0.2; // How quickly speed increases
+    this.deceleration = 0.1; // How quickly speed decreases when not touching
     
-    // Клавиатура
+    // Keyboard controls (unchanged)
     window.addEventListener('keydown', e => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
           !this.game.keys.includes(e.key)) {
@@ -83,14 +86,15 @@ class InputHandler {
       }
     });
 
-    // Тачскрин управление
+    // Enhanced touch controls with acceleration/deceleration
     window.addEventListener('touchstart', e => {
-      if (this.touchId === null) { // Обрабатываем только первое касание
+      if (this.touchId === null) {
         const touch = e.touches[0];
         this.touchId = touch.identifier;
-        this.game.touchStartX = touch.clientX;
         this.game.touchStartY = touch.clientY;
+        this.game.currentTouchY = touch.clientY;
         this.game.isTouching = true;
+        this.game.touchVelocity = 0; // Reset velocity on new touch
       }
     });
 
@@ -100,31 +104,59 @@ class InputHandler {
       const touch = Array.from(e.touches).find(t => t.identifier === this.touchId);
       if (!touch) return;
       
-      const currentX = touch.clientX;
-      const currentY = touch.clientY;
+      const previousY = this.game.currentTouchY;
+      this.game.currentTouchY = touch.clientY;
+      const deltaY = this.game.currentTouchY - previousY;
       
-      this.game.touchDeltaX = currentX - this.game.touchStartX;
-      this.game.touchDeltaY = currentY - this.game.touchStartY;
-      
-      // Определение направления свайпа
-      if (Math.abs(this.game.touchDeltaX) > this.touchThreshold || 
-          Math.abs(this.game.touchDeltaY) > this.touchThreshold) {
-        this.game.isSliding = true;
+      // Apply acceleration based on movement direction
+      if (Math.abs(deltaY) > 0) {
+        // Determine direction (1 for down, -1 for up)
+        const direction = deltaY > 0 ? 1 : -1;
+        // Increase velocity with acceleration, but cap at maxSpeed
+        this.game.touchVelocity = Math.min(
+          this.maxSpeed, 
+          Math.max(
+            -this.maxSpeed, 
+            this.game.touchVelocity + (direction * this.acceleration)
+          )
+        );
       }
+      
+      this.game.touchDeltaY = this.game.touchVelocity;
     });
 
     window.addEventListener('touchend', e => {
       const touch = Array.from(e.changedTouches).find(t => t.identifier === this.touchId);
       if (touch) {
         this.game.isTouching = false;
-        this.game.isSliding = false;
         this.touchId = null;
-        this.game.touchDeltaX = 0;
-        this.game.touchDeltaY = 0;
+        // Don't reset velocity immediately - let it decelerate
       }
     });
   }
-}    
+
+  update() {
+    // Apply deceleration when not touching
+    if (!this.game.isTouching && Math.abs(this.game.touchVelocity) > 0) {
+      // Reduce velocity gradually
+      if (this.game.touchVelocity > 0) {
+        this.game.touchVelocity = Math.max(0, this.game.touchVelocity - this.deceleration);
+      } else {
+        this.game.touchVelocity = Math.min(0, this.game.touchVelocity + this.deceleration);
+      }
+      
+      // Update deltaY for game to use
+      this.game.touchDeltaY = this.game.touchVelocity;
+      
+      // Reset when velocity becomes negligible
+      if (Math.abs(this.game.touchVelocity) < 0.05) {
+        this.game.touchVelocity = 0;
+        this.game.touchDeltaY = 0;
+      }
+    }
+  }
+}
+    
     class Player{
       constructor (game){
         this.game = game;
