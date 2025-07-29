@@ -63,60 +63,77 @@
             }
         }
 
-        class Cow {
-            constructor(game) {
-                this.game = game;
-                this.image = document.getElementById('cow');
-                this.spriteWidth = 100;
-                this.spriteHeight = 80;
-                this.sizeModifier = Math.random() * 0.5 + 0.5; // 0.5 to 1.0
-                this.width = this.spriteWidth * this.sizeModifier;
-                this.height = this.spriteHeight * this.sizeModifier;
-                this.x = this.game.width;
-                this.y = this.game.height - this.height - 20;
-                this.speed = Math.random() * 2 + 1;
-                this.markedForDeletion = false;
-                this.frameX = 0;
-                this.maxFrame = 2;
+class Cow {
+    constructor(game) {
+        this.game = game;
+        this.image = document.getElementById('cow');
+        
+        // Original image dimensions (840x679)
+        this.spriteWidth = 840;
+        this.spriteHeight = 679;
+        
+        // Scaled display size (150x120)
+        this.width = 150;
+        this.height = 120;
+        
+        // Alternative random sizing (commented out)
+        // this.sizeModifier = Math.random() * 0.3 + 0.7; // 0.7 to 1.0
+        // this.width = 150 * this.sizeModifier;
+        // this.height = 120 * this.sizeModifier;
+        
+        this.x = this.game.width;
+        this.y = this.game.height - this.height - 20;
+        this.speed = Math.random() * 2 + 1;
+        this.markedForDeletion = false;
+        this.frameX = 0;
+        this.maxFrame = 0; // Set to 0 if not using sprite sheet
+        this.frameTimer = 0;
+        this.frameInterval = 200;
+    }
+    
+    update(deltaTime) {
+        this.x -= this.speed + this.game.speed;
+        
+        // Animation (if using sprite sheet)
+        if (this.maxFrame > 0) {
+            if (this.frameTimer > this.frameInterval) {
+                if (this.frameX < this.maxFrame) this.frameX++;
+                else this.frameX = 0;
                 this.frameTimer = 0;
-                this.frameInterval = 200;
-            }
-            
-            update(deltaTime) {
-                this.x -= this.speed + this.game.speed;
-                
-                // Animation
-                if (this.frameTimer > this.frameInterval) {
-                    if (this.frameX < this.maxFrame) this.frameX++;
-                    else this.frameX = 0;
-                    this.frameTimer = 0;
-                } else {
-                    this.frameTimer += deltaTime;
-                }
-                
-                // Remove when off screen
-                if (this.x < -this.width) {
-                    this.markedForDeletion = true;
-                }
-                
-                // Collision detection
-                if (this.game.checkCollision(this, this.game.player)) {
-                    this.game.hitCow();
-                    this.markedForDeletion = true;
-                }
-            }
-            
-            draw(context) {
-                context.drawImage(
-                    this.image,
-                    this.frameX * this.spriteWidth, 0,
-                    this.spriteWidth, this.spriteHeight,
-                    this.x, this.y,
-                    this.width, this.height
-                );
+            } else {
+                this.frameTimer += deltaTime;
             }
         }
-
+        
+        if (this.x < -this.width) {
+            this.markedForDeletion = true;
+        }
+        
+        if (this.game.checkCollision(this, this.game.player)) {
+            this.game.hitCow();
+            this.markedForDeletion = true;
+        }
+    }
+    
+    draw(context) {
+        // For single image (not sprite sheet)
+        context.drawImage(
+            this.image,
+            this.x, this.y,
+            this.width, this.height
+        );
+        
+        /* For sprite sheet version:
+        context.drawImage(
+            this.image,
+            this.frameX * this.spriteWidth, 0,
+            this.spriteWidth, this.spriteHeight,
+            this.x, this.y,
+            this.width, this.height
+        );
+        */
+    }
+}
         class CowSpawner {
             constructor(game) {
                 this.game = game;
