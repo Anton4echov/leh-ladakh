@@ -205,7 +205,7 @@ class InputHandler {
           this.game.sound_stop_bool = true;
         }
 
-        // checking touches by X
+/*        // checking touches by X
 
         if (this.game.touchDeltaX > 0) {
             this.game.sound_gaz_bool = true;
@@ -249,7 +249,34 @@ class InputHandler {
           this.frameX++;
         } else {
           this.frameX = 0;
-        }
+        }*/
+
+// Replace your current touch controls with this:
+if (this.game.isTouching) {
+  // X-axis movement
+  if (Math.abs(this.game.touchDeltaX) > 0) {
+    this.speedX = this.game.touchDeltaX > 0 
+      ? this.maxSpeedXslide 
+      : -this.maxSpeedXslide;
+    this.game.sound_gaz_bool = this.game.touchDeltaX > 0;
+  }
+  
+  // Y-axis movement with acceleration
+  if (Math.abs(this.game.touchDeltaY) > 0) {
+    this.speedY = this.game.touchDeltaY * this.maxSpeedYslide;
+  }
+} else {
+  // Deceleration is handled automatically by InputHandler
+  this.speedX *= 0.9; // Small additional friction
+  this.speedY *= 0.9;
+  if (Math.abs(this.speedX) < 0.1) this.speedX = 0;
+  if (Math.abs(this.speedY) < 0.1) this.speedY = 0;
+  
+  this.game.sound_gaz_bool = false;
+}
+
+
+          
       }
       
       draw(context){
@@ -289,9 +316,14 @@ class InputHandler {
         this.touchStartX = 0;
         // this.touchEndY = 0;
         // this.touchEndY = 0;
-        this.isSlidind = false;
+        //this.isSlidind = false;
         this.touchDeltaY = 0;
         this.touchDeltaX = 0;
+          
+        this.isTouching = false;  // Should match InputHandler
+        this.isSliding = false;   // Your existing property
+        this.touchVelocity = 0;   // For acceleration system
+        this.currentTouchY = 0;   // For tracking current position
       }
       update(){
         this.input.update();
