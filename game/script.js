@@ -169,7 +169,7 @@ class InputHandler {
         
         this.xLimitRight = this.game.width-this.width;
         this.xLimitLeft = 0;
-        this.yLimitUp = 185;
+        this.yLimitUp = 285;
         this.yLimitDown = this.game.height-this.height;
         
         this.frameX = 0;
