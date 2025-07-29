@@ -68,7 +68,7 @@ class InputHandler {
     this.touchId = null;
     this.touchThreshold = 10;
     this.maxSpeed = 5; // Maximum vertical speed
-    this.acceleration = 0.2; // How quickly speed increases
+    this.acceleration = 0.6; // How quickly speed increases
     this.deceleration = 0.1; // How quickly speed decreases when not touching
     
     // Keyboard controls (unchanged)
