@@ -390,6 +390,7 @@ class Cow {
                 this.music = new Music(this);
                 this.input = new InputHandler(this);
                 this.cowSpawner = new CowSpawner(this);
+                
                 this.keys = [];
                 this.speed = 1;
                 this.score = 0;
