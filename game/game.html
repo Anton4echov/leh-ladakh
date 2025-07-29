@@ -312,9 +312,10 @@ class Cow {
                 this.maxSpeed = 5;
                 this.acceleration = 0.2;
                 this.deceleration = 0.1;
-                
+                const canvas = document.getElementById('canvas1');
+
                 // Keyboard controls
-                window.addEventListener('keydown', e => {
+                canvas.addEventListener('keydown', e => {
                     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
                         !this.game.keys.includes(e.key)) {
                         this.game.keys.push(e.key);
