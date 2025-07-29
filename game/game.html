@@ -322,7 +322,7 @@ class Cow {
                     }
                 });
                 
-                window.addEventListener('keyup', e => {
+                canvas.addEventListener('keyup', e => {
                     const index = this.game.keys.indexOf(e.key);
                     if (index > -1) {
                         this.game.keys.splice(index, 1);
@@ -330,7 +330,7 @@ class Cow {
                 });
 
                 // Touch controls
-                window.addEventListener('touchstart', e => {
+                canvas.addEventListener('touchstart', e => {
                     if (this.touchId === null) {
                         const touch = e.touches[0];
                         this.touchId = touch.identifier;
@@ -344,7 +344,7 @@ class Cow {
                     }
                 });
 
-                window.addEventListener('touchmove', e => {
+                canvas.addEventListener('touchmove', e => {
                     if (!this.game.isTouching) return;
                     
                     const touch = Array.from(e.touches).find(t => t.identifier === this.touchId);
@@ -387,7 +387,7 @@ class Cow {
                     this.game.touchDeltaX = this.game.touchVelocityX;
                 });
 
-                window.addEventListener('touchend', e => {
+                canvas.addEventListener('touchend', e => {
                     const touch = Array.from(e.changedTouches).find(t => t.identifier === this.touchId);
                     if (touch) {
                         this.game.isTouching = false;
