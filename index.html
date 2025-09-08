@@ -12,11 +12,9 @@
   <meta name="google-site-verification" content="Vy_7IEiB5LnDvD_vopy0n6hge5lkuvSpSYA_0hAaePQ" />
   <link rel="canonical" href="https://leh-ladakh.onrender.com/" />
   <style>
-
     html {
       overflow-x: hidden;  
     }
-    
     
     body {
       overflow-x: hidden;  
@@ -37,7 +35,7 @@
       font-size: 1.2rem;
     }
     h2, p {
-      text-align: center;       /* Center text and inline elements */
+      text-align: center;
     }
     main {
       background: rgba(0, 0, 0, 0.5);
@@ -48,57 +46,67 @@
     }
 
     .gallery {
-  display: flex;
-  overflow-x: auto;
-  gap: 10px;
-  scroll-behavior: smooth;
-  padding-bottom: 10px;
-}
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      scroll-behavior: smooth;
+      padding-bottom: 10px;
+    }
 
-.gallery::-webkit-scrollbar {
-  display: none; /* Hide scrollbar */
-}
+    .gallery::-webkit-scrollbar {
+      display: none;
+    }
 
-.gallery img {
-  flex: 0 0 auto;
-  width: 150px;
-  height: 120px;
-  border-radius: 6px;
-  object-fit: cover;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
+    .gallery img {
+      flex: 0 0 auto;
+      width: 150px;
+      height: 120px;
+      border-radius: 6px;
+      object-fit: cover;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    
     .gallery img:hover {
       transform: scale(1.05);
     }
+    
     .admins {
-      text-align: center;       /* Center text and inline elements */
+      text-align: center;
       margin-top: 20px;
     }
+    
     .admin-link-leh {
       display: flex;
-      justify-content: center;  /* horizontal centering */
+      justify-content: center;
       align-items: center;
       color: #00b2ff;
       text-decoration: none;
       margin-bottom: 8px;
       font-weight: bold;
+      opacity: 0;
+      animation: slideInFromRight 0.6s forwards;
     }
+    
     .admin-link-leh svg{
       width: 20px;
       height: 20px;
       margin-right: 8px;
       fill: #00b2ff;
     }
+    
     .admin-link {
       display: flex;
-      justify-content: center;  /* horizontal centering */
+      justify-content: center;
       align-items: center;
       color: #00b2ff;
       text-decoration: none;
       margin-bottom: 8px;
       font-weight: bold;
+      opacity: 0;
+      animation: slideInFromRight 0.6s forwards;
     }
+    
     .admin-link svg {
       width: 20px;
       height: 20px;
@@ -106,46 +114,39 @@
       fill: #00b2ff;
     }
     
-a {
-  align-items: center;
-  font-weight: bold;
-  font-size: 1.1em;
-  padding: 10px 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
-  transition: background 0.3s ease;
-}
+    a {
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.1em;
+      padding: 10px 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
+      transition: background 0.3s ease;
+    }
     
-@keyframes slideInFromRight {
-  0% {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
+    @keyframes slideInFromRight {
+      0% {
+        opacity: 0;
+        transform: translateX(50px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
 
-.admin-link {
-  opacity: 0;
-  animation: slideInFromRight 0.6s forwards;
-}
+    /* Animation delays for top buttons */
+    .admin-link-leh:nth-child(1) { animation-delay: 0.5s; }
+    .admin-link-leh:nth-child(2) { animation-delay: 1s; }
+    .admin-link-leh:nth-child(3) { animation-delay: 1.5s; }
+    .admin-link-leh:nth-child(4) { animation-delay: 2s; }
 
-/* If number of items is fixed, you can add nth-child delays here */
-.admin-link:nth-child(2) { animation-delay: 1s; }
-.admin-link:nth-child(3) { animation-delay: 1.5s; }
-.admin-link:nth-child(4) { animation-delay: 2s; }
-.admin-link:nth-child(5) { animation-delay: 2.5s; }
-.admin-link:nth-child(6) { animation-delay: 3s; }
-
-    /* If number of items is fixed, you can add nth-child delays here */
-.admin-link-leh:nth-child(2) { animation-delay: 1s; }
-.admin-link-leh:nth-child(3) { animation-delay: 1.5s; }
-.admin-link-leh:nth-child(4) { animation-delay: 2s; }
-.admin-link-leh:nth-child(5) { animation-delay: 2.5s; }
-.admin-link-leh:nth-child(6) { animation-delay: 3s; }
-    
+    /* Animation delays for bottom buttons */
+    .admin-link:nth-child(1) { animation-delay: 2.5s; }
+    .admin-link:nth-child(2) { animation-delay: 3s; }
+    .admin-link:nth-child(3) { animation-delay: 3.5s; }
+    .admin-link:nth-child(4) { animation-delay: 4s; }
+    .admin-link:nth-child(5) { animation-delay: 4.5s; }
     
     iframe {
       width: 100%;
@@ -154,11 +155,85 @@ a {
       border-radius: 8px;
       margin-top: 20px;
     }
+    
     footer {
       text-align: center;
       padding: 10px;
       color: black;
       font-size: 0.9rem;
+    }
+    
+    /* Modal styles for full-size gallery */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      overflow: hidden;
+    }
+    
+    .modal-content {
+      position: relative;
+      margin: auto;
+      display: block;
+      width: 80%;
+      max-width: 1200px;
+      max-height: 80vh;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    .modal-image {
+      width: 100%;
+      height: auto;
+      max-height: 80vh;
+      object-fit: contain;
+    }
+    
+    .modal-caption {
+      text-align: center;
+      color: #fff;
+      padding: 10px;
+      font-size: 1.2rem;
+    }
+    
+    .close {
+      position: absolute;
+      top: 15px;
+      right: 35px;
+      color: #f1f1f1;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1001;
+    }
+    
+    .prev, .next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: white;
+      font-size: 30px;
+      font-weight: bold;
+      padding: 16px;
+      cursor: pointer;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 0 3px 3px 0;
+      user-select: none;
+      z-index: 1001;
+    }
+    
+    .next {
+      right: 0;
+      border-radius: 3px 0 0 3px;
+    }
+    
+    .prev:hover, .next:hover {
+      background-color: rgba(0, 0, 0, 0.8);
     }
   </style>
 </head>
@@ -233,9 +308,98 @@ a {
   <footer>
     &copy; 2025 Кто в Лех, кто по дрова?
   </footer>
-  
-  <script src="scroll.js"></script>
-  <script src="admin-animation.js"></script>
 
+<script src="scroll.js"></script>
+  <script src="admin-animation.js"></script>
+  
+  <!-- Modal for full-size gallery -->
+  <div id="galleryModal" class="modal">
+    <span class="close">&times;</span>
+    <span class="prev">&#10094;</span>
+    <span class="next">&#10095;</span>
+    <div class="modal-content">
+      <img class="modal-image" id="modalImg">
+      <div class="modal-caption" id="caption"></div>
+    </div>
+  </div>
+
+  <script>
+    // Gallery modal functionality
+    const modal = document.getElementById("galleryModal");
+    const modalImg = document.getElementById("modalImg");
+    const captionText = document.getElementById("caption");
+    const closeBtn = document.getElementsByClassName("close")[0];
+    const prevBtn = document.getElementsByClassName("prev")[0];
+    const nextBtn = document.getElementsByClassName("next")[0];
+    
+    // Get all gallery images
+    const galleryImages = document.querySelectorAll('.gallery img');
+    let currentIndex = 0;
+    
+    // Open modal when clicking on an image
+    galleryImages.forEach((img, index) => {
+      img.addEventListener('click', () => {
+        currentIndex = index;
+        openModal();
+      });
+    });
+    
+    function openModal() {
+      modal.style.display = "block";
+      updateModalImage();
+      
+      // Prevent background scrolling when modal is open
+      document.body.style.overflow = "hidden";
+    }
+    
+    function updateModalImage() {
+      modalImg.src = galleryImages[currentIndex].src;
+      captionText.innerHTML = galleryImages[currentIndex].alt;
+    }
+    
+    // Close modal
+    closeBtn.onclick = function() {
+      modal.style.display = "none";
+      document.body.style.overflow = "auto"; // Re-enable scrolling
+    }
+    
+    // Navigate to previous image
+    prevBtn.onclick = function(e) {
+      e.stopPropagation();
+      currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+      updateModalImage();
+    }
+    
+    // Navigate to next image
+    nextBtn.onclick = function(e) {
+      e.stopPropagation();
+      currentIndex = (currentIndex + 1) % galleryImages.length;
+      updateModalImage();
+    }
+    
+    // Close modal when clicking outside the image
+    modal.onclick = function(event) {
+      if (event.target === modal) {
+        modal.style.display = "none";
+        document.body.style.overflow = "auto";
+      }
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(event) {
+      if (modal.style.display === "block") {
+        if (event.key === "Escape") {
+          modal.style.display = "none";
+          document.body.style.overflow = "auto";
+        } else if (event.key === "ArrowLeft") {
+          currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+          updateModalImage();
+        } else if (event.key === "ArrowRight") {
+          currentIndex = (currentIndex + 1) % galleryImages.length;
+          updateModalImage();
+        }
+      }
+    });
+  </script>
 </body>
 </html>
