@@ -235,6 +235,70 @@
     .prev:hover, .next:hover {
       background-color: rgba(0, 0, 0, 0.8);
     }
+    
+    /* Chat styles */
+    .chat-container {
+      margin-top: 30px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 8px;
+      padding: 15px;
+    }
+    
+    .chat-header {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    
+    .chat-area {
+      height: 200px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    
+    .message {
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 5px;
+      background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .chat-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .chat-inputs input {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #444;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    
+    .chat-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .chat-buttons button {
+      flex: 1;
+      padding: 8px;
+      border-radius: 5px;
+      border: none;
+      background: #00b2ff;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .chat-buttons button:hover {
+      background: #0099cc;
+    }
   </style>
 </head>
 <body>
@@ -281,6 +345,26 @@
       <iframe width="560" height="315" src="https://www.youtube.com/embed/xexOO3cu9dw?si=-9bJoaCjbT_D0dc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     </section>
 
+    <!-- Chat Section -->
+    <section class="chat-container">
+      <div class="chat-header">
+        <h2>Чат сообщества</h2>
+      </div>
+      <div id="chat-area" class="chat-area">
+        <!-- Messages will be displayed here -->
+      </div>
+      <div class="chat-inputs">
+        <input type="text" id="user-name-input" placeholder="Ваше имя">
+        <input type="text" id="message-input" placeholder="Ваше сообщение">
+      </div>
+<script>/*      <div class="chat-buttons">
+        <button id="send-btn">Отправить</button>
+        <button id="refresh-btn">Обновить</button>
+        <button id="delete-btn" style="background: #ff4757;">Очистить</button>
+      </div>
+    </section>
+*/<script>    
+
     <section class="admins" aria-label="Администраторы сообщества в Telegram">
       <h2>Администраторы группы в Telegram</h2>
       <a href="https://t.me/tashtashnatash72" class="admin-link" target="_blank" rel="noopener noreferrer">
@@ -309,9 +393,6 @@
     &copy; 2025 Кто в Лех, кто по дрова?
   </footer>
 
-<script src="scroll.js"></script>
-  <script src="admin-animation.js"></script>
-  
   <!-- Modal for full-size gallery -->
   <div id="galleryModal" class="modal">
     <span class="close">&times;</span>
@@ -400,6 +481,258 @@
         }
       }
     });
+    
+    // Chat functionality
+    let pageSize = 100; // Number of records per page
+    let currentPage = 1; // Start from the first page
+    let data_messages = []; 
+    let secret_key_server = '123';
+
+    // Load the username from localStorage when the page loads
+    window.onload = function() {
+        const savedUsername = localStorage.getItem('username');
+        if (savedUsername) {
+            document.getElementById('user-name-input').value = savedUsername;
+        }
+        fetchMessages();
+        setInterval(fetchMessages, 25000); // Fetch every 25 seconds (25000 milliseconds)
+    };
+
+    function simpleEncrypt(data, key) {
+      let encryptedData = '';
+      let j = 0;
+      
+      // Iterate through each character of the data
+      for (let i = 0; i < data.length; i++) {
+        // Add a random character before the current character every 1st symbol
+        let randomChar = String.fromCharCode(Math.floor(Math.random() * 94) + 32); 
+        if (j >=key.length) {j=0;}
+        // Check if the random character is '*' and change it to '$' , * - symbol separator in file
+        if (randomChar === '*') {
+            randomChar = '$';
+        }
+        encryptedData += randomChar;
+
+        // Add the current character from the data
+        let unicodeCurrentChar = data[i].charCodeAt(0);
+        let unicodeCurrentKeyChar = key[j].charCodeAt(0);
+        let encryptedChar = String.fromCharCode(unicodeCurrentKeyChar+unicodeCurrentChar);
+        encryptedData += encryptedChar;
+        j++;
+      }
+
+      return encryptedData;
+    }
+
+    function simpleDecrypt(data, key) {
+        let decryptedData = '';
+        let j = 0;
+
+        // Iterate through the modified data
+        for (let i = 0; i < data.length; i++) {
+            if (j >= key.length) {
+                j = 0;
+            }
+            // Skip every first symbol (i.e., indices 0, 2, 4, 6, ...)
+            if (i % 2 === 0) {
+                continue;  // Skip this byte (this is where the random character was added during encryption)
+            }
+            let unicodeCurrentChar = data.charCodeAt(i); // Get the Unicode value of the encrypted character
+            let unicodeCurrentKeyChar = key[j].charCodeAt(0); // Get the Unicode value of the key character
+            let decryptedChar = String.fromCharCode(unicodeCurrentChar - unicodeCurrentKeyChar); // Decrypt the character
+            // Append the character to decryptedData
+            decryptedData += decryptedChar;
+            j++;
+        }
+        return decryptedData;
+    }
+
+    function stringToColor(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const color = (hash & 0x00FFFFFF)
+            .toString(16)
+            .toUpperCase()
+            .padStart(6, '0');
+        return `#${color}`;
+    }
+
+    function fetchMessages() {
+        const url = `https://focusedbadge-us.backendless.app/api/data/messy_buggy?pageSize=${pageSize}&page=${currentPage}`;
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'application-id': '99451B96-0AE0-4556-A88D-84D2500E2AC5',
+            'api-key': 'E502729E-2312-47D4-9AF5-9084CDEAB1C7'
+        };
+
+        fetch(url, { method: 'GET', headers: headers })
+            .then(response => {
+                if (!response.ok) {
+                    console.log(currentPage);
+                    throw new Error('Failed to fetch data: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                data_messages = data;
+                console.log("Fetched data:", data);
+
+                // Get the chat area element
+                const chatArea = document.getElementById('chat-area');
+                chatArea.innerHTML = "";
+
+                // Sort and display the messages
+                data.sort((a, b) => new Date(b.created) - new Date(a.created));
+
+                data.forEach(record => {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message');
+
+                    // Generate a color for the user based on their username
+                    const userColor = stringToColor(record.user);
+
+                    // Set the background color for each message
+                    messageElement.style.backgroundColor = userColor;
+                    const userKey = '123';  // Get the inputted key
+                    let messageContent = '';
+                    
+                    
+                        const decryptedMessage = simpleDecrypt(record.message, '123');
+                        messageContent = `
+                        <p><strong>${record.user}</strong>: ${decryptedMessage}</p>
+                        <small>Sent at: ${record.time_date_stamp}</small>
+                        <hr>`;
+                        console.log(messageContent);
+
+                    messageElement.innerHTML = messageContent;
+                    chatArea.appendChild(messageElement);
+                });
+
+                // Check if there are more messages to fetch (i.e., data.length < pageSize)
+                if (data.length === pageSize) {
+                    currentPage++;  // Move to the next page
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+    }
+
+    function sendAndsaveMessage() {
+        // Get the value from the message input field
+        const field_message = document.getElementById('message-input').value;
+
+        // Get the value from the username input field
+        const field_username = document.getElementById('user-name-input').value;
+
+        // Check if the message is not empty and username is provided
+        if (field_message.trim() === "") {
+            console.error("Message cannot be empty.");
+            return;
+        }
+        if (field_username.trim() === "") {
+            console.error("Username cannot be empty.");
+            return;
+        }
+
+        // Save the username to localStorage
+        localStorage.setItem('username', field_username);
+
+        const encrypted_field_message = simpleEncrypt(field_message, secret_key_server);
+
+        // Data you want to send (message and username)
+        const dataToUpdate = {
+            message: encrypted_field_message, // Use the message from the input field
+            user: field_username,   // Use the username from the input field
+            time_date_stamp: new Date().toISOString() // Timestamp for when the message is sent
+        };
+
+        
+        const url = "https://focusedbadge-us.backendless.app/api/data/messy_buggy"; // Backendless API endpoint
+
+        // Headers for the POST request
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'application-id': '99451B96-0AE0-4556-A88D-84D2500E2AC5',  // Your App ID
+            'api-key': 'E502729E-2312-47D4-9AF5-9084CDEAB1C7'             // Your JS API Key
+        };
+
+        // Making the POST request using fetch
+        fetch(url, {
+            method: 'POST', // Changed to POST since you're adding a new message
+            headers: headers,
+            body: JSON.stringify(dataToUpdate)  // Convert the data to JSON string
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.log(dataToUpdate);
+                throw new Error('Failed to update data: ' + response.statusText);
+            }
+            return response.json();  // Parse the response JSON
+        })
+        .then(data => {
+            console.log("Response Data:", data);  // Handle the response data after update
+            // Clear the input fields after the message is sent
+            document.getElementById('message-input').value = "";
+
+            // Fetch updated messages
+            fetchMessages();
+        })
+        .catch(error => {
+            console.error("Error:", error);  // Handle any errors that occur during the request
+        });
+    }
+
+    function deleteMessages() {
+        // Assuming the API supports deleting messages by objectId using the DELETE method.
+        const messageIdsToDelete = [];
+        data = data_messages;
+
+        // Here, let's assume you want to delete the first 10 messages from the fetched data.
+        // You can modify this logic to delete based on any condition you prefer.
+        data.slice(0, 10).forEach(record => {
+            messageIdsToDelete.push(record.objectId);  // Assuming objectId is the identifier of the message
+            console.log(record.objectId);
+        });
+
+        if (messageIdsToDelete.length === 0) {
+            console.log("No messages to delete.");
+            return;
+        }
+
+        // Loop over each message ID and delete them using DELETE method
+        messageIdsToDelete.forEach(id => {
+            const url = `https://focusedbadge-us.backendless.app/api/data/messy_buggy/${id}`;  // Delete endpoint with message ID
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'application-id': '99451B96-0AE0-4556-A88D-84D2500E2AC5',
+                'api-key': 'E502729E-2312-47D4-9AF5-9084CDEAB1C7'
+            };
+
+            fetch(url, { method: 'DELETE', headers: headers })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to delete message with ID ' + id + ': ' + response.statusText);
+                    }
+                    console.log(`Message with ID ${id} deleted successfully.`);
+                })
+                .catch(error => {
+                    console.error("Error deleting message:", error);
+                });
+        });
+
+        // After deleting, you may want to refresh the messages or update the chat
+        fetchMessages();  // Re-fetch messages to show updated chat
+    }
+
+    document.getElementById('send-btn').addEventListener('click', sendAndsaveMessage);
+    document.getElementById('refresh-btn').addEventListener('click', fetchMessages);
+    document.getElementById('delete-btn').addEventListener('click', deleteMessages);
   </script>
 </body>
 </html>
