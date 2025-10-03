@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Карта Ладакха — Ваши места</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+  body {
+    margin: 0;
+    font-family: 'Lora', serif;
+    background: url('https://cdn.glitch.global/bea12857-f511-461d-adbc-da5b46687f87/IMG_20231118_212542_728.jpg?v=1750048499482') no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+  }
+  header {
+    background: rgba(0,0,0,0.6);
+    padding: 20px;
+    text-align: center;
+  }
+  h1 { margin: 0; font-size: 1.2rem; }
+  main {
+    background: rgba(0,0,0,0.6);
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  #map { height: 600px; width: 100%; border-radius: 8px; margin-top: 20px; }
+  .upload-section, .action-buttons, .stats, .info {
+    background: rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+  }
+  .upload-section input[type="file"] { width: 100%; padding: 8px; margin-top: 10px; border-radius: 5px; border: none; }
+  .action-buttons button {
+    margin: 5px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .save-btn { background: #27ae60; color: white; }
+  .orange { background: #f39c12; color: white; }
+  .clear-btn { background: #e74c3c; color: white; }
+  .places-list-item { margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.15); border-radius: 5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Карта Ладакха — Ваши места</h1>
+</header>
+<main>
+  <div class="upload-section">
+    <h3>Загрузите CSV файл с местами</h3>
+    <input type="file" id="file-input" accept=".csv" />
+    <p>Файл должен содержать колонки: name, latitude, longitude, description</p>
+  </div>
+
+  <div class="stats" id="stats">
+    Всего мест на карте: <span id="points-count">0</span>
+  </div>
+
+  <div class="action-buttons">
+    <button class="save-btn" id="save-all-btn">💾 Сохранить все места</button>
+    <button class="orange" id="save-new-btn">🆕 Сохранить новые места</button>
+    <button class="clear-btn" id="clear-custom-btn">🗑️ Очистить пользовательские места</button>
+  </div>
+
+  <div id="map"></div>
+
+  <div class="info">
+    <h3>📋 Список добавленных мест:</h3>
+    <ul id="places-list" style="list-style: none; padding-left: 0; max-height: 300px; overflow-y: auto;"></ul>
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/papaparse@5.3.2/papaparse.min.js"></script>
+<script>
+  const map = L.map('map').setView([34.1526, 77.5771], 8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+  let allMarkers = [];
+  let lastSaveTime = new Date();
+  const samplePlaces = [
+    { name: "Лех", lat: 34.1526, lng: 77.5771, description: "Столица Ладакха" },
+    { name: "Монастырь Тикси", lat: 34.0675, lng: 77.6653, description: "Крупнейший монастырь" }
+  ];
+
+  function updateStats() {
+    document.getElementById('points-count').textContent = allMarkers.length;
+    const list = document.getElementById('places-list');
+    list.innerHTML = '';
+    allMarkers.forEach(marker => {
+      const item = document.createElement('li');
+      item.className = 'places-list-item';
+      item.innerHTML = `<b>${marker.name}</b><br>${marker.lat.toFixed(4)}, ${marker.lng.toFixed(4)}<br>${marker.description}`;
+      item.onclick = () => map.setView([marker.lat, marker.lng], 12);
+      list.appendChild(item);
+    });
+  }
+
+  function addMarker(place, isCustom=false){
+    const marker = L.marker([place.lat, place.lng]).addTo(map).bindPopup(`<b>${place.name}</b><br>${place.description||''}`);
+    allMarkers.push({ marker, ...place, isCustom, created: new Date() });
+    updateStats();
+  }
+
+  function saveAllPoints(){
+    if(!allMarkers.length) { alert('Нет мест!'); return; }
+    let csv = "name,latitude,longitude,description,type\n";
+    allMarkers.forEach(m=>{
+      csv+=`"${m.name}","${m.lat}","${m.lng}","${m.description}","${m.isCustom?'custom':'default'}"\n`;
+    });
+    const blob = new Blob([csv], {type:'text/csv'}); 
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ladakh_places.csv'; a.click();
+    lastSaveTime=new Date();
+  }
+
+  document.getElementById('file-input').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    Papa.parse(file, {header:true, skipEmptyLines:true, complete:function(results){
+      results.data.forEach(place=>{
+        const lat=parseFloat(place.latitude), lng=parseFloat(place.longitude);
+        if(!isNaN(lat)&&!isNaN(lng)) addMarker({name:place.name||'', lat, lng, description:place.description||''}, true);
+      });
+    }});
+  });
+
+  document.getElementById('save-all-btn').addEventListener('click', saveAllPoints);
+
+  // Add default places
+  samplePlaces.forEach(p=>addMarker(p,false));
+</script>
+</body>
+</html>
