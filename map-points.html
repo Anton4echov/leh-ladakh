@@ -51,6 +51,7 @@
   .save-btn { background: #27ae60; color: white; }
   .orange { background: #f39c12; color: white; }
   .clear-btn { background: #e74c3c; color: white; }
+  .delete-all-btn { background: #8e44ad; color: white; }
   .places-list-item { 
     margin: 5px 0; 
     padding: 8px; 
@@ -122,6 +123,7 @@
     <button class="save-btn" id="save-all-btn">💾 Сохранить все места</button>
     <button class="orange" id="save-new-btn">🆕 Сохранить только новые места</button>
     <button class="clear-btn" id="clear-custom-btn">🗑️ Очистить пользовательские места</button>
+    <button class="delete-all-btn" id="delete-all-btn">💥 Удалить все места</button>
   </div>
 
   <div id="map">
@@ -129,6 +131,7 @@
       <button id="reset-view">📍 Вернуть к Ладакху</button>
       <button class="save-btn" id="quick-save-btn">💾 Все места</button>
       <button class="orange" id="quick-save-new-btn">🆕 Новые места</button>
+      <button class="delete-all-btn" id="quick-delete-all-btn">💥 Все места</button>
     </div>
   </div>
 
@@ -149,7 +152,6 @@
   let allMarkers = [];
   let lastSaveTime = new Date();
   
-  // Расширенный список мест Ладакха
   const samplePlaces = [
     { name: "Лех", lat: 34.1526, lng: 77.5771, description: "Столица Ладакха" },
     { name: "Монастырь Тикси", lat: 34.0675, lng: 77.6653, description: "Крупнейший монастырь в Ладакхе" },
@@ -186,18 +188,8 @@
   }
 
   function addMarker(place, isCustom=false){
-    // Создаем кастомные иконки для разных типов маркеров
-    const customIcon = L.divIcon({
-      html: '📍',
-      iconSize: [30, 30],
-      className: 'custom-marker'
-    });
-
-    const defaultIcon = L.divIcon({
-      html: '🔴',
-      iconSize: [25, 25],
-      className: 'default-marker'
-    });
+    const customIcon = L.divIcon({ html: '📍', iconSize: [30, 30], className: 'custom-marker' });
+    const defaultIcon = L.divIcon({ html: '🔴', iconSize: [25, 25], className: 'default-marker' });
 
     const marker = L.marker([place.lat, place.lng], {
       icon: isCustom ? customIcon : defaultIcon
@@ -216,11 +208,29 @@
     updateStats();
   }
 
-  function saveAllPoints(){
-    if(!allMarkers.length) { 
-      alert('Нет мест для сохранения!'); 
-      return; 
+  // Функция удаления всех мест
+  function deleteAllPoints() {
+    if (allMarkers.length === 0) {
+      alert('Нет мест для удаления!');
+      return;
     }
+
+    if (confirm(`Вы уверены, что хотите удалить ВСЕ ${allMarkers.length} мест? Это действие нельзя отменить!`)) {
+      // Удаляем все маркеры с карты
+      allMarkers.forEach(markerData => {
+        map.removeLayer(markerData.marker);
+      });
+      
+      // Очищаем массив маркеров
+      allMarkers = [];
+      
+      updateStats();
+      alert('💥 Все места удалены!');
+    }
+  }
+
+  function saveAllPoints(){
+    if(!allMarkers.length) { alert('Нет мест для сохранения!'); return; }
     
     let filename = prompt("Введите имя файла (без расширения):", "ladakh_all_places");
     if (!filename) return;
@@ -243,14 +253,8 @@
   }
 
   function saveNewPoints() {
-    const newMarkers = allMarkers.filter(marker => 
-      marker.isCustom && marker.created > lastSaveTime
-    );
-
-    if (newMarkers.length === 0) {
-      alert('Нет новых мест для сохранения!');
-      return;
-    }
+    const newMarkers = allMarkers.filter(marker => marker.isCustom && marker.created > lastSaveTime);
+    if (newMarkers.length === 0) { alert('Нет новых мест для сохранения!'); return; }
 
     let filename = prompt("Введите имя файла для новых мест (без расширения):", "ladakh_new_places");
     if (!filename) return;
@@ -264,10 +268,8 @@
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
+    link.setAttribute('href', URL.createObjectURL(blob));
     link.setAttribute('download', filename + '.csv');
-    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -278,16 +280,10 @@
 
   function clearCustomPoints() {
     const customMarkers = allMarkers.filter(marker => marker.isCustom);
-    if (customMarkers.length === 0) {
-      alert('Нет пользовательских мест для удаления!');
-      return;
-    }
+    if (customMarkers.length === 0) { alert('Нет пользовательских мест для удаления!'); return; }
 
     if (confirm(`Удалить ${customMarkers.length} пользовательских мест?`)) {
-      customMarkers.forEach(markerData => {
-        map.removeLayer(markerData.marker);
-      });
-
+      customMarkers.forEach(markerData => map.removeLayer(markerData.marker));
       allMarkers = allMarkers.filter(marker => !marker.isCustom);
       updateStats();
       alert('🗑️ Пользовательские места удалены!');
@@ -318,19 +314,14 @@
           }
         });
         
-        if (bounds.length > 0) {
-          map.fitBounds(bounds, { padding: [20, 20] });
-        }
-        
+        if (bounds.length > 0) map.fitBounds(bounds, { padding: [20, 20] });
         alert(`✅ Успешно загружено ${loadedCount} мест`);
       },
-      error: function(error) {
-        alert('❌ Ошибка при чтении файла: ' + error);
-      }
+      error: function(error) { alert('❌ Ошибка при чтении файла: ' + error); }
     });
   });
 
-  // Обработчик клика по карте для добавления нового места
+  // Click map to add new place
   map.on('click', function(e) {
     const lat = e.latlng.lat;
     const lon = e.latlng.lng;
@@ -340,26 +331,31 @@
 
     const description = prompt("Введите описание (необязательно):") || "";
 
-    addMarker({
-      name: name,
-      lat: lat,
-      lng: lon,
-      description: description
-    }, true);
+    addMarker({ name, lat, lng: lon, description }, true);
   });
 
-  // Обработчики кнопок
+  // Map control buttons
   document.getElementById('reset-view').addEventListener('click', function() {
     map.setView([34.1526, 77.5771], 8);
   });
-
   document.getElementById('save-all-btn').addEventListener('click', saveAllPoints);
   document.getElementById('save-new-btn').addEventListener('click', saveNewPoints);
   document.getElementById('quick-save-btn').addEventListener('click', saveAllPoints);
   document.getElementById('quick-save-new-btn').addEventListener('click', saveNewPoints);
   document.getElementById('clear-custom-btn').addEventListener('click', clearCustomPoints);
+  
+  // New delete all buttons
+  document.getElementById('delete-all-btn').addEventListener('click', deleteAllPoints);
+  document.getElementById('quick-delete-all-btn').addEventListener('click', deleteAllPoints);
 
-  // Добавляем предустановленные места при загрузке
+  // Prevent map click when clicking buttons
+  document.querySelectorAll('.map-controls button').forEach(btn => {
+    btn.addEventListener('click', function(event){
+      event.stopPropagation();
+    });
+  });
+
+  // Add predefined places
   samplePlaces.forEach(p => addMarker(p, false));
 </script>
 </body>
