@@ -24,6 +24,9 @@
       background-size: cover;
       line-height: 1.6;
       position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
     
     header {
@@ -47,12 +50,15 @@
       margin: 30px auto;
       padding: 20px;
       border-radius: 8px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
     
     .game-container {
       position: relative;
       width: 100%;
-      height: 500px;
+      height: 50vh; /* 50% высоты области просмотра */
       margin: 20px auto;
       border-radius: 8px;
       overflow: hidden;
@@ -108,12 +114,18 @@
       padding: 10px;
       color: black;
       font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.7);
     }
     
     /* Hide game assets */
     #layer1, #layer2, #layer3, #layer4, #player, #cow, 
     #backingtrack_music, #sound_gaz, #sound_stop {
       display: none;
+    }
+
+    .game-info {
+      margin-top: 20px;
+      text-align: center;
     }
   </style>
 </head>
@@ -139,7 +151,10 @@
         <canvas id="canvas1"></canvas>
       </div>
       
-      <p>Управление: стрелки клавиатуры (↑↓←→) или свайпы на сенсорном экране</p>
+      <div class="game-info">
+        <p>Управление: стрелки клавиатуры (↑↓←→) или свайпы на сенсорном экране</p>
+        <p>Избегайте коров на дороге! После 3 столкновений игра закончится.</p>
+      </div>
     </section>
   </main>
   
@@ -163,8 +178,19 @@
     window.addEventListener('load', function() {
         const canvas = document.getElementById('canvas1');
         const ctx = canvas.getContext('2d');
-        canvas.width = 1500;
-        canvas.height = 500;
+        
+        // Устанавливаем размеры canvas в соответствии с контейнером
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        // Инициализируем размеры canvas
+        resizeCanvas();
+        
+        // Обрабатываем изменение размера окна
+        window.addEventListener('resize', resizeCanvas);
         
         // Предотвращаем стандартное поведение касания на canvas
         canvas.addEventListener('touchstart', function(e) {
@@ -199,8 +225,8 @@
                 else this.x -= this.game.speed * this.speedModifier;
             }
             draw(context) {
-                context.drawImage(this.image, this.x, this.y);
-                context.drawImage(this.image, this.x + this.width, this.y);
+                context.drawImage(this.image, this.x, this.y, this.width, this.height);
+                context.drawImage(this.image, this.x + this.width, this.y, this.width, this.height);
             }
         }
 
@@ -243,42 +269,22 @@
                 this.game = game;
                 this.image = document.getElementById('cow');
                 
-                // Original image dimensions (840x679)
-                this.spriteWidth = 840;
-                this.spriteHeight = 679;
-                
-                // Scaled display size (150x120)
+                // Scaled display size
                 this.width = 100;
                 this.height = 80;
-                
-                // Alternative random sizing (commented out)
-                // this.sizeModifier = Math.random() * 0.3 + 0.7; // 0.7 to 1.0
-                // this.width = 150 * this.sizeModifier;
-                // this.height = 120 * this.sizeModifier;
                 
                 this.x = this.game.width;
                 this.y = this.game.height - this.height - 100;
                 this.speed = Math.random() * 2 + 1;
                 this.markedForDeletion = false;
                 this.frameX = 0;
-                this.maxFrame = 0; // Set to 0 if not using sprite sheet
+                this.maxFrame = 0;
                 this.frameTimer = 0;
                 this.frameInterval = 200;
             }
             
             update(deltaTime) {
                 this.x -= this.speed + this.game.speed;
-                
-                // Animation (if using sprite sheet)
-                if (this.maxFrame > 0) {
-                    if (this.frameTimer > this.frameInterval) {
-                        if (this.frameX < this.maxFrame) this.frameX++;
-                        else this.frameX = 0;
-                        this.frameTimer = 0;
-                    } else {
-                        this.frameTimer += deltaTime;
-                    }
-                }
                 
                 if (this.x < -this.width) {
                     this.markedForDeletion = true;
@@ -291,22 +297,11 @@
             }
             
             draw(context) {
-                // For single image (not sprite sheet)
                 context.drawImage(
                     this.image,
                     this.x, this.y,
                     this.width, this.height
                 );
-                
-                /* For sprite sheet version:
-                context.drawImage(
-                    this.image,
-                    this.frameX * this.spriteWidth, 0,
-                    this.spriteWidth, this.spriteHeight,
-                    this.x, this.y,
-                    this.width, this.height
-                );
-                */
             }
         }
         
@@ -466,7 +461,7 @@
                 this.width = 166;
                 this.height = 215;
                 this.x = 20;
-                this.y = 227;
+                this.y = this.game.height / 2 - this.height / 2;
                 this.xLimitRight = this.game.width - this.width;
                 this.xLimitLeft = 0;
                 this.yLimitUp = 0;
@@ -599,8 +594,6 @@
             hitCow() {
                 this.speed *= 0.5; // Slow down
                 this.player.collisionCount++;
-                this.music.sound_cow.currentTime = 0;
-                this.music.sound_cow.play();
                 
                 // Game over after 3 collisions
                 if (this.player.collisionCount >= 3) {
@@ -637,9 +630,9 @@
                 
                 // Draw UI
                 context.fillStyle = 'white';
-                context.font = '30px Arial';
-                context.fillText(`Score: ${Math.floor(this.score)}`, 20, 40);
-                context.fillText(`Cows Hit: ${this.player.collisionCount}/3`, 20, 80);
+                context.font = '20px Arial';
+                context.fillText(`Score: ${Math.floor(this.score)}`, 20, 30);
+                context.fillText(`Cows Hit: ${this.player.collisionCount}/3`, 20, 60);
             }
         }
         
