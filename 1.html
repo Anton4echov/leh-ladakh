@@ -240,6 +240,30 @@
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
   }
+  
+  /* Стили для свернутого меню */
+  .map-controls.collapsed {
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+  }
+  
+  .map-controls.collapsed button {
+    display: none;
+  }
+  
+  .map-controls.collapsed .collapse-btn {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    font-size: 1.2rem;
+  }
+  
+  .collapse-btn {
+    background: rgba(255,255,255,0.3) !important;
+    font-weight: bold;
+  }
 </style>
 </head>
 <body>
@@ -277,6 +301,7 @@
 
   <div id="map">
     <div class="map-controls">
+      <button class="collapse-btn" id="collapse-btn">≡</button>
       <button id="reset-view">📍 Вернуть к Ладакху</button>
       <button class="location-btn" id="quick-location-btn">📍 Где я?</button>
       <button class="add-place-btn" id="quick-add-place-btn">📍 Добавить места</button>
@@ -322,6 +347,7 @@
   let isAddingMode = false;
   let clickHandler = null;
   let userLocationMarker = null;
+  let isControlsCollapsed = false;
   
   const samplePlaces = [
     { name: "Лех", lat: 34.1526, lng: 77.5771, description: "Столица Ладакха" },
@@ -453,10 +479,10 @@
           created: new Date()
         });
         
-        // Центрируем карту на местоположении пользователя
+        // Центрируем карту на местоположении пользователя с приближением
         map.getView().animate({
           center: ol.proj.fromLonLat([lng, lat]),
-          zoom: 16,
+          zoom: 20,
           duration: 1000
         });
         
@@ -512,11 +538,27 @@
       
       item.innerHTML = `<b>${place.name}</b> ${typeBadge}<br>${place.lat.toFixed(4)}, ${place.lng.toFixed(4)}<br>${place.description}`;
       item.onclick = () => {
+        // Приближаемся к выбранному месту с зумом 16 (примерно 20-30 метров)
         map.getView().animate({
           center: ol.proj.fromLonLat([place.lng, place.lat]),
-          zoom: 12,
+          zoom: 16,
           duration: 800
         });
+        
+        // Показываем всплывающее окно с описанием
+        if (place.feature && place.feature.get('overlay')) {
+          const overlay = place.feature.get('overlay');
+          const coordinate = ol.proj.fromLonLat([place.lng, place.lat]);
+          overlay.setPosition(coordinate);
+          place.feature.get('element').style.display = 'block';
+          
+          // Скрываем через 5 секунд
+          setTimeout(() => {
+            place.feature.get('element').style.display = 'none';
+          }, 5000);
+        }
+        
+        showNotification(`Переход к "${place.name}"`, 'info');
       };
       list.appendChild(item);
     });
@@ -550,6 +592,12 @@
     // Добавляем всплывающее окно
     const element = document.createElement('div');
     element.innerHTML = `<b>${place.name}</b><br>${place.description || ''}`;
+    element.style.display = 'none';
+    element.style.background = 'rgba(0,0,0,0.7)';
+    element.style.color = 'white';
+    element.style.padding = '5px 10px';
+    element.style.borderRadius = '4px';
+    element.style.maxWidth = '200px';
     
     const overlay = new ol.Overlay({
       element: element,
@@ -565,8 +613,20 @@
 
     // Показываем всплывающее окно при клике
     feature.on('click', function(evt) {
+      // Сначала скрываем все остальные всплывающие окна
+      allPlaces.forEach(p => {
+        if (p.feature && p.feature.get('element')) {
+          p.feature.get('element').style.display = 'none';
+        }
+      });
+      
       overlay.setPosition(evt.coordinate);
       element.style.display = 'block';
+      
+      // Скрываем через 5 секунд
+      setTimeout(() => {
+        element.style.display = 'none';
+      }, 5000);
     });
 
     allPlaces.push({ 
@@ -697,6 +757,22 @@
     showNotification('Файл food-le.csv скачан', 'success');
   }
 
+  // Функция для сворачивания/разворачивания панели управления
+  function toggleControls() {
+    const controls = document.querySelector('.map-controls');
+    const collapseBtn = document.getElementById('collapse-btn');
+    
+    isControlsCollapsed = !isControlsCollapsed;
+    
+    if (isControlsCollapsed) {
+      controls.classList.add('collapsed');
+      collapseBtn.innerHTML = '≡';
+    } else {
+      controls.classList.remove('collapsed');
+      collapseBtn.innerHTML = '×';
+    }
+  }
+
   document.getElementById('file-input').addEventListener('change', e => {
     const file = e.target.files[0];
     if(!file) return;
@@ -740,6 +816,7 @@
       zoom: 8,
       duration: 800
     });
+    showNotification('Карта возвращена к виду Ладакха', 'info');
   });
   
   // Обработчики кнопок
@@ -758,6 +835,9 @@
   // New delete all buttons
   document.getElementById('delete-all-btn').addEventListener('click', deleteAllPoints);
   document.getElementById('quick-delete-all-btn').addEventListener('click', deleteAllPoints);
+
+  // Кнопка сворачивания панели управления
+  document.getElementById('collapse-btn').addEventListener('click', toggleControls);
 
   // Prevent map click when clicking buttons
   document.querySelectorAll('.map-controls button').forEach(btn => {
