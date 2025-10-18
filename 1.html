@@ -33,7 +33,7 @@
     border-radius: 8px;
   }
   #map { 
-    height: 600px; 
+    height: 450px; /* Высота карты 450px */
     width: 100%; 
     border-radius: 8px; 
     margin-top: 20px; 
@@ -331,7 +331,7 @@
     ],
     view: new ol.View({
       center: ol.proj.fromLonLat([77.5771, 34.1526]),
-      zoom: 8
+      zoom: 9 // Стандартный зум 9
     })
   });
 
@@ -479,10 +479,10 @@
           created: new Date()
         });
         
-        // Центрируем карту на местоположении пользователя с приближением
+        // Центрируем карту на местоположении пользователя с максимальным приближением
         map.getView().animate({
           center: ol.proj.fromLonLat([lng, lat]),
-          zoom: 20,
+          zoom: 19, // Максимальное приближение для пользовательских мест
           duration: 1000
         });
         
@@ -536,12 +536,18 @@
         typeBadge = '<span class="place-type type-default">Стандарт</span>';
       }
       
-      item.innerHTML = `<b>${place.name}</b> ${typeBadge}<br>${place.lat.toFixed(4)}, ${place.lng.toFixed(4)}<br>${place.description}`;
+      item.innerHTML = `<b>${place.name}</b> ${typeBadge}<br>${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}<br>${place.description}`;
       item.onclick = () => {
-        // Приближаемся к выбранному месту с зумом 16 (примерно 20-30 метров)
+        // Приближаемся к выбранному месту с разным зумом
+        let zoomLevel = 9; // Стандартный зум для обычных мест
+        
+        if (place.isCustom || place.isLocation) {
+          zoomLevel = 19; // Максимальный зум для пользовательских мест и местоположения
+        }
+        
         map.getView().animate({
           center: ol.proj.fromLonLat([place.lng, place.lat]),
-          zoom: 16,
+          zoom: zoomLevel,
           duration: 800
         });
         
@@ -552,13 +558,13 @@
           overlay.setPosition(coordinate);
           place.feature.get('element').style.display = 'block';
           
-          // Скрываем через 5 секунд
+          // Автоматически скрываем через 5 секунд
           setTimeout(() => {
             place.feature.get('element').style.display = 'none';
           }, 5000);
         }
         
-        showNotification(`Переход к "${place.name}"`, 'info');
+        showNotification(`Переход к "${place.name}" (зум ${zoomLevel})`, 'info');
       };
       list.appendChild(item);
     });
@@ -591,19 +597,23 @@
 
     // Добавляем всплывающее окно
     const element = document.createElement('div');
-    element.innerHTML = `<b>${place.name}</b><br>${place.description || ''}`;
+    element.innerHTML = `<b>${place.name}</b><br>${place.description || ''}<br><small>Координаты: ${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}</small>`;
     element.style.display = 'none';
-    element.style.background = 'rgba(0,0,0,0.7)';
+    element.style.background = 'rgba(0,0,0,0.8)';
     element.style.color = 'white';
-    element.style.padding = '5px 10px';
-    element.style.borderRadius = '4px';
-    element.style.maxWidth = '200px';
+    element.style.padding = '8px 12px';
+    element.style.borderRadius = '6px';
+    element.style.maxWidth = '250px';
+    element.style.border = '2px solid #fff';
+    element.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
+    element.style.fontSize = '14px';
+    element.style.lineHeight = '1.4';
     
     const overlay = new ol.Overlay({
       element: element,
       positioning: 'bottom-center',
       stopEvent: false,
-      offset: [0, -10]
+      offset: [0, -15]
     });
     
     map.addOverlay(overlay);
@@ -611,7 +621,7 @@
     feature.set('overlay', overlay);
     feature.set('element', element);
 
-    // Показываем всплывающее окно при клике
+    // Показываем всплывающее окно при клике на маркер
     feature.on('click', function(evt) {
       // Сначала скрываем все остальные всплывающие окна
       allPlaces.forEach(p => {
@@ -623,7 +633,7 @@
       overlay.setPosition(evt.coordinate);
       element.style.display = 'block';
       
-      // Скрываем через 5 секунд
+      // Автоматически скрываем через 5 секунд
       setTimeout(() => {
         element.style.display = 'none';
       }, 5000);
@@ -813,7 +823,7 @@
   document.getElementById('reset-view').addEventListener('click', function() {
     map.getView().animate({
       center: ol.proj.fromLonLat([77.5771, 34.1526]),
-      zoom: 8,
+      zoom: 9, // Стандартный зум 9
       duration: 800
     });
     showNotification('Карта возвращена к виду Ладакха', 'info');
