@@ -151,7 +151,7 @@
       
       <div class="game-info">
         <p>Управление: стрелки клавиатуры (↑↓←→) или свайпы на сенсорном экране</p>
-        <p>Избегайте коров на дороге! После 9 столкновений игра закончится.</p>
+        <p>Избегайте коров на дороге! После 3 столкновений игра закончится.</p>
       </div>
     </section>
   </main>
@@ -267,38 +267,18 @@
                 this.game = game;
                 this.image = document.getElementById('cow');
                 
-                // Размеры спрайт-листа коровы
-                this.spriteWidth = 1024;
-                this.spriteHeight = 1024;
-                
-                // Размер одного кадра
-                this.frameWidth = this.spriteWidth / 2;
-                this.frameHeight = this.spriteHeight / 2;
-                
-                // РАЗНЫЕ РАЗМЕРЫ КОРОВ - от нормального до 2x
-                this.sizeModifier = Math.random() * 1.0 + 1.0;
-                this.width = 60 * this.sizeModifier;
-                this.height = 60 * this.sizeModifier;
-                
-                // ЗАМЕДЛЕННАЯ СКОРОСТЬ КОРОВ
-                this.speed = Math.random() * 0.8 + 0.1; // Было 0.2-1.7, теперь 0.1-0.9
+                // Scaled display size
+                this.width = 100;
+                this.height = 80;
                 
                 this.x = this.game.width;
-                
-                // РАЗНЫЕ ПОЗИЦИИ КОРОВ
-                const minY = this.game.height - this.height - 150;
-                const maxY = this.game.height - this.height - 50;
-                this.y = Math.random() * (maxY - minY) + minY;
-                
+                this.y = this.game.height - this.height - 100;
+                this.speed = Math.random() * 2 + 1;
                 this.markedForDeletion = false;
-                
-                // Анимация коровы
                 this.frameX = 0;
-                this.frameY = 0;
-                this.currentFrame = 0;
-                this.totalFrames = 4;
+                this.maxFrame = 0;
                 this.frameTimer = 0;
-                this.frameInterval = 300 + Math.random() * 300; // Более медленная анимация
+                this.frameInterval = 200;
             }
             
             update(deltaTime) {
@@ -312,29 +292,13 @@
                     this.game.hitCow();
                     this.markedForDeletion = true;
                 }
-                
-                // Анимация коровы
-                if (this.frameTimer > this.frameInterval) {
-                    this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
-                    this.frameX = this.currentFrame % 2;
-                    this.frameY = Math.floor(this.currentFrame / 2);
-                    this.frameTimer = 0;
-                } else {
-                    this.frameTimer += deltaTime;
-                }
             }
             
             draw(context) {
                 context.drawImage(
                     this.image,
-                    this.frameX * this.frameWidth,
-                    this.frameY * this.frameHeight,
-                    this.frameWidth,
-                    this.frameHeight,
-                    this.x,
-                    this.y,
-                    this.width,
-                    this.height
+                    this.x, this.y,
+                    this.width, this.height
                 );
             }
         }
@@ -344,14 +308,14 @@
                 this.game = game;
                 this.cows = [];
                 this.spawnTimer = 0;
-                this.spawnInterval = 2500; // Более редкое появление коров
+                this.spawnInterval = 2000;
             }
             
             update(deltaTime) {
                 if (this.spawnTimer > this.spawnInterval) {
                     this.cows.push(new Cow(this.game));
                     this.spawnTimer = 0;
-                    this.spawnInterval = 2000 + Math.random() * 3000; // Более редкое появление
+                    this.spawnInterval = 1500 + Math.random() * 2000;
                 } else {
                     this.spawnTimer += deltaTime;
                 }
@@ -370,11 +334,11 @@
                 this.game = game;
                 this.touchId = null;
                 
-                // НАСТРОЙКИ ДЛЯ ЗАМЕДЛЕННОГО УПРАВЛЕНИЯ
-                this.maxSpeed = 6; // Уменьшена максимальная скорость
-                this.acceleration = 0.1;  // Более плавное ускорение
-                this.deceleration = 0.06;  // Более плавное замедление
-                this.touchSensitivity = 0.6; // Меньшая чувствительность касания
+                // УЛУЧШЕННЫЕ НАСТРОЙКИ ДЛЯ ПЛАВНОГО УПРАВЛЕНИЯ
+                this.maxSpeed = 8;
+                this.acceleration = 0.15;  // Более плавное ускорение
+                this.deceleration = 0.08;  // Более плавное замедление
+                this.touchSensitivity = 0.8; // Чувствительность касания
 
                 // Keyboard controls
                 window.addEventListener('keydown', e => {
@@ -497,38 +461,34 @@
                 this.game = game;
                 this.width = 166;
                 this.height = 215;
-                this.x = 120; // Сдвинуто вправо на 100px
-                
-                // УВЕЛИЧЕННАЯ ОБЛАСТЬ ДВИЖЕНИЯ (+100px со всех сторон)
-                const margin = 100;
-                this.xLimitRight = this.game.width - this.width + margin; // +100px справа
-                this.xLimitLeft = -margin; // -100px слева
-                this.yLimitUp = -margin; // -100px сверху
-                this.yLimitDown = this.game.height - this.height + margin; // +100px снизу
-                
+                this.x = 20;
                 this.y = this.game.height / 2 - this.height / 2;
+                this.xLimitRight = this.game.width - this.width;
+                this.xLimitLeft = 0;
+                this.yLimitUp = 0;
+                this.yLimitDown = this.game.height - this.height;
                 this.frameX = 0;
                 this.frameY = 0;
                 this.maxFrame = 2;
                 this.frameTimer = 0;
                 this.frameInterval = 100;
                 
-                // ЗАМЕДЛЕННЫЕ НАСТРОЙКИ ДВИЖЕНИЯ
+                // УЛУЧШЕННЫЕ НАСТРОЙКИ ДВИЖЕНИЯ ДЛЯ ПЛАВНОСТИ
                 this.speedX = 0;
                 this.speedY = 0;
-                this.maxSpeedY = 3;        // Уменьшена максимальная скорость
-                this.maxSpeedX = 6;        // Уменьшена максимальная скорость
-                this.maxSpeedYslide = 0.5; // Меньшая чувствительность
-                this.maxSpeedXslide = 2.0; // Меньшая чувствительность
-                this.keyboardAcceleration = 0.2; // Медленнее ускорение
-                this.keyboardDeceleration = 0.15; // Медленнее замедление
+                this.maxSpeedY = 4;        // Увеличена максимальная скорость
+                this.maxSpeedX = 9;        // Увеличена максимальная скорость
+                this.maxSpeedYslide = 0.7; // Более отзывчивое управление
+                this.maxSpeedXslide = 2.5; // Более отзывчивое управление
+                this.keyboardAcceleration = 0.3; // Плавное ускорение от клавиатуры
+                this.keyboardDeceleration = 0.2; // Плавное замедление от клавиатуры
                 
                 this.image = document.getElementById('player');
                 this.collisionCount = 0;
             }
             
             update(deltaTime) {
-                // Keyboard controls - ЗАМЕДЛЕННОЕ УПРАВЛЕНИЕ
+                // Keyboard controls - ПЛАВНОЕ УПРАВЛЕНИЕ
                 if (this.game.keys.includes('ArrowUp') || this.game.keys.includes('w')) {
                     this.speedY = Math.max(-this.maxSpeedY, this.speedY - this.keyboardAcceleration);
                 } else if (this.game.keys.includes('ArrowDown') || this.game.keys.includes('s')) {
@@ -559,7 +519,7 @@
                     }
                 }
                 
-                // Touch controls (only if no keyboard input) - ЗАМЕДЛЕННОЕ УПРАВЛЕНИЕ
+                // Touch controls (only if no keyboard input) - ПЛАВНОЕ УПРАВЛЕНИЕ
                 if (!this.game.keys.length && this.game.isTouching) {
                     if (Math.abs(this.game.touchDeltaX) > 0) {
                         this.speedX = this.game.touchDeltaX * this.maxSpeedXslide;
@@ -574,10 +534,10 @@
                 
                 // Дополнительное плавное замедление
                 if (!this.game.isTouching && !this.game.keys.length) {
-                    this.speedX *= 0.92;
-                    this.speedY *= 0.92;
-                    if (Math.abs(this.speedX) < 0.03) this.speedX = 0;
-                    if (Math.abs(this.speedY) < 0.03) this.speedY = 0;
+                    this.speedX *= 0.95;
+                    this.speedY *= 0.95;
+                    if (Math.abs(this.speedX) < 0.05) this.speedX = 0;
+                    if (Math.abs(this.speedY) < 0.05) this.speedY = 0;
                     this.game.sound_gaz_bool = false;
                     this.game.sound_stop_bool = false;
                 }
@@ -586,7 +546,7 @@
                 this.y += this.speedY;
                 this.x += this.speedX;
                 
-                // Boundaries с увеличенной областью
+                // Boundaries
                 if (this.x < this.xLimitLeft) {
                     this.x = this.xLimitLeft;
                     this.speedX = 0;
@@ -639,11 +599,10 @@
                 this.cowSpawner = new CowSpawner(this);
                 
                 this.keys = [];
-                this.speed = 0.6; // ЗАМЕДЛЕННАЯ ОСНОВНАЯ СКОРОСТЬ ИГРЫ
+                this.speed = 1;
                 this.score = 0;
                 this.sound_gaz_bool = false;
                 this.sound_stop_bool = true;
-                this.maxCollisions = 9;
                 
                 // Touch properties
                 this.touchStartY = 0;
@@ -671,12 +630,12 @@
             }
             
             hitCow() {
-                this.speed *= 0.8; // Меньше замедление при столкновении
+                this.speed *= 0.5; // Slow down
                 this.player.collisionCount++;
                 
-                // Game over after 9 collisions
-                if (this.player.collisionCount >= this.maxCollisions) {
-                    alert(`Game Over! Вы сбили ${this.player.collisionCount} коров! Ваш счет: ${Math.floor(this.score)}`);
+                // Game over after 3 collisions
+                if (this.player.collisionCount >= 3) {
+                    alert('Game Over! You hit too many cows!');
                     document.location.reload();
                 }
             }
@@ -689,11 +648,11 @@
                 this.cowSpawner.update(deltaTime);
                 
                 // Score increases with time
-                this.score += this.speed * 0.05; // Медленнее набор очков
+                this.score += this.speed * 0.1;
                 
                 // Gradually restore speed after collision
-                if (this.speed < 0.6) {
-                    this.speed += 0.005; // Медленнее восстановление
+                if (this.speed < 1) {
+                    this.speed += 0.005;
                 }
             }
             
@@ -711,33 +670,7 @@
                 context.fillStyle = 'white';
                 context.font = '20px Arial';
                 context.fillText(`Score: ${Math.floor(this.score)}`, 20, 30);
-                context.fillText(`Cows Hit: ${this.player.collisionCount}/${this.maxCollisions}`, 20, 60);
-                
-                // Индикатор здоровья
-                const healthWidth = 200;
-                const healthHeight = 20;
-                const healthX = this.width - healthWidth - 20;
-                const healthY = 30;
-                
-                // Фон индикатора
-                context.fillStyle = 'rgba(0,0,0,0.5)';
-                context.fillRect(healthX, healthY, healthWidth, healthHeight);
-                
-                // Здоровье
-                const healthPercent = 1 - (this.player.collisionCount / this.maxCollisions);
-                if (healthPercent > 0.6) {
-                    context.fillStyle = '#4CAF50';
-                } else if (healthPercent > 0.3) {
-                    context.fillStyle = '#FFC107';
-                } else {
-                    context.fillStyle = '#F44336';
-                }
-                
-                context.fillRect(healthX, healthY, healthWidth * healthPercent, healthHeight);
-                
-                // Рамка
-                context.strokeStyle = 'white';
-                context.strokeRect(healthX, healthY, healthWidth, healthHeight);
+                context.fillText(`Cows Hit: ${this.player.collisionCount}/3`, 20, 60);
             }
         }
         
