@@ -64,6 +64,7 @@
   .orange { background: #f39c12; color: white; }
   .clear-btn { background: #e74c3c; color: white; }
   .delete-all-btn { background: #8e44ad; color: white; }
+  .download-btn { background: #3498db; color: white; }
   .places-list-item { 
     margin: 5px 0; 
     padding: 8px; 
@@ -216,6 +217,7 @@
   <div class="action-buttons">
     <button class="save-btn" id="save-all-btn">💾 Сохранить все места</button>
     <button class="orange" id="save-new-btn">🆕 Сохранить только новые места</button>
+    <button class="download-btn" id="download-food-btn">📥 Скачать места food-le.csv</button>
     <button class="clear-btn" id="clear-custom-btn">🗑️ Очистить пользовательские места</button>
     <button class="delete-all-btn" id="delete-all-btn">💥 Удалить все места</button>
   </div>
@@ -225,6 +227,7 @@
       <button id="reset-view">📍 Вернуть к Ладакху</button>
       <button class="save-btn" id="quick-save-btn">💾 Все места</button>
       <button class="orange" id="quick-save-new-btn">🆕 Новые места</button>
+      <button class="download-btn" id="quick-download-food-btn">📥 food-le.csv</button>
       <button class="delete-all-btn" id="quick-delete-all-btn">💥 Все места</button>
     </div>
   </div>
@@ -462,6 +465,17 @@
     }
   }
 
+  // Функция для скачивания файла food-le.csv
+  function downloadFoodCSV() {
+    // Создаем ссылку для скачивания файла
+    const link = document.createElement('a');
+    link.setAttribute('href', 'food-le.csv');
+    link.setAttribute('download', 'food-le.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   document.getElementById('file-input').addEventListener('change', e => {
     const file = e.target.files[0];
     if(!file) return;
@@ -503,8 +517,10 @@
   });
   document.getElementById('save-all-btn').addEventListener('click', saveAllPoints);
   document.getElementById('save-new-btn').addEventListener('click', saveNewPoints);
+  document.getElementById('download-food-btn').addEventListener('click', downloadFoodCSV);
   document.getElementById('quick-save-btn').addEventListener('click', saveAllPoints);
   document.getElementById('quick-save-new-btn').addEventListener('click', saveNewPoints);
+  document.getElementById('quick-download-food-btn').addEventListener('click', downloadFoodCSV);
   document.getElementById('clear-custom-btn').addEventListener('click', clearCustomPoints);
   
   // New delete all buttons
