@@ -621,24 +621,6 @@
     feature.set('overlay', overlay);
     feature.set('element', element);
 
-    // Показываем всплывающее окно при клике на маркер
-    feature.on('click', function(evt) {
-      // Сначала скрываем все остальные всплывающие окна
-      allPlaces.forEach(p => {
-        if (p.feature && p.feature.get('element')) {
-          p.feature.get('element').style.display = 'none';
-        }
-      });
-      
-      overlay.setPosition(evt.coordinate);
-      element.style.display = 'block';
-      
-      // Автоматически скрываем через 5 секунд
-      setTimeout(() => {
-        element.style.display = 'none';
-      }, 5000);
-    });
-
     allPlaces.push({ 
       feature,
       name: place.name, 
@@ -651,6 +633,39 @@
     
     updateStats();
   }
+
+  // Обработчик кликов на карту для показа информации о маркерах
+  map.on('click', function(evt) {
+    // Сначала скрываем все всплывающие окна
+    allPlaces.forEach(place => {
+      if (place.feature && place.feature.get('element')) {
+        place.feature.get('element').style.display = 'none';
+      }
+    });
+
+    // Проверяем, был ли клик на маркере
+    const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+      return feature;
+    });
+
+    if (feature) {
+      // Нашли маркер - показываем информацию
+      const overlay = feature.get('overlay');
+      const element = feature.get('element');
+      
+      if (overlay && element) {
+        overlay.setPosition(evt.coordinate);
+        element.style.display = 'block';
+        
+        // Автоматически скрываем через 5 секунд
+        setTimeout(() => {
+          element.style.display = 'none';
+        }, 5000);
+        
+        showNotification(`Информация о "${feature.get('name')}"`, 'info');
+      }
+    }
+  });
 
   // Функция удаления всех мест
   function deleteAllPoints() {
