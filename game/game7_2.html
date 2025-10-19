@@ -117,7 +117,7 @@
     
     /* Hide game assets */
     #layer1, #layer2, #layer3, #layer4, #player, #cow, 
-    #backingtrack_music, #sound_gaz, #sound_stop {
+    #backingtrack_music, #sound_gaz, #sound_stop, #sound_mu {
       display: none;
     }
 
@@ -164,6 +164,7 @@
   <audio id="backingtrack_music" src="african-rock-game.mp3"></audio>
   <audio id="sound_gaz" src="gaz-moto.mp3"></audio>
   <audio id="sound_stop" src="stopping-moto.mp3"></audio>
+  <audio id="sound_mu" src="mu.mp3"></audio>
   
   <img id="player" src="player.png">
   <img id="cow" src="cow.png">
@@ -234,10 +235,11 @@
                 this.media = document.getElementById('backingtrack_music');
                 this.sound_gaz = document.getElementById('sound_gaz');
                 this.sound_stop = document.getElementById('sound_stop');
-                this.sound_cow = document.getElementById('sound_cow');
+                this.sound_mu = document.getElementById('sound_mu');
                 this.media.volume = 0.5;
                 this.sound_gaz.volume = 0.3;
                 this.sound_stop.volume = 0.3;
+                this.sound_mu.volume = 0.5;
             }
         }
 
@@ -512,11 +514,17 @@
             constructor(game) {
                 this.game = game;
                 
-                // УМЕНЬШЕННЫЙ РАЗМЕР ИГРОКА НА 20%
+                // Исходные размеры
                 this.originalWidth = 166;
                 this.originalHeight = 215;
-                this.width = this.originalWidth * 0.8; // Уменьшение на 20%
-                this.height = this.originalHeight * 0.8; // Уменьшение на 20%
+                
+                // Начальный размер (80% от исходного)
+                this.initialWidth = this.originalWidth * 0.8;
+                this.initialHeight = this.originalHeight * 0.8;
+                
+                // Текущие размеры
+                this.width = this.initialWidth;
+                this.height = this.initialHeight;
                 
                 // СТАРТОВАЯ ПОЗИЦИЯ: 30px от нижнего края
                 this.x = 20;
@@ -549,9 +557,35 @@
                 this.collisionHeight = this.height - 30; // Уменьшение на 15px с каждой стороны
                 this.collisionOffsetX = 15; // Смещение для центрирования
                 this.collisionOffsetY = 15; // Смещение для центрирования
+                
+                this.isVisible = true; // Флаг видимости игрока
+            }
+            
+            // Метод для уменьшения размера игрока
+            shrink() {
+                if (this.collisionCount >= this.game.maxCollisions) {
+                    this.isVisible = false; // Игрок полностью исчезает
+                } else {
+                    // Уменьшаем размер на 1/19 часть от начального размера
+                    const shrinkFactor = 1 - (this.collisionCount / this.game.maxCollisions);
+                    this.width = this.initialWidth * shrinkFactor;
+                    this.height = this.initialHeight * shrinkFactor;
+                    
+                    // Обновляем область коллизии
+                    this.collisionWidth = Math.max(10, this.width - 30);
+                    this.collisionHeight = Math.max(10, this.height - 30);
+                    this.collisionOffsetX = (this.width - this.collisionWidth) / 2;
+                    this.collisionOffsetY = (this.height - this.collisionHeight) / 2;
+                    
+                    // Обновляем позицию Y чтобы оставаться у нижнего края
+                    this.y = this.game.height - this.height - 30;
+                }
             }
             
             update(deltaTime) {
+                // Если игрок не видим, не обновляем
+                if (!this.isVisible) return;
+                
                 // Keyboard controls
                 if (this.game.keys.includes('ArrowUp') || this.game.keys.includes('w')) {
                     this.speedY = Math.max(-this.maxSpeedY, this.speedY - 0.2);
@@ -629,6 +663,9 @@
             }
             
             draw(context) {
+                // Если игрок не видим, не рисуем
+                if (!this.isVisible) return;
+                
                 context.drawImage(
                     this.image,
                     this.frameX * this.originalWidth, this.frameY * this.originalHeight,
@@ -666,6 +703,9 @@
             
             // Метод для проверки коллизии с учетом вырезанного треугольника
             checkCollision(object) {
+                // Если игрок не видим, коллизий нет
+                if (!this.isVisible) return false;
+                
                 const playerLeft = this.x + this.collisionOffsetX;
                 const playerRight = playerLeft + this.collisionWidth;
                 const playerTop = this.y + this.collisionOffsetY;
@@ -751,13 +791,22 @@
             }
             
             hitCow() {
+                // Воспроизводим звук "му"
+                this.music.sound_mu.currentTime = 0;
+                this.music.sound_mu.play();
+                
                 this.speed *= 0.7;
                 this.player.collisionCount++;
                 
+                // Уменьшаем размер игрока
+                this.player.shrink();
+                
                 // Game over after 19 collisions
                 if (this.player.collisionCount >= this.maxCollisions) {
-                    alert(`Game Over! Вы сбили ${this.player.collisionCount} коров! Ваш счет: ${Math.floor(this.score)}`);
-                    document.location.reload();
+                    setTimeout(() => {
+                        alert(`Game Over! Вы сбили ${this.player.collisionCount} коров! Ваш счет: ${Math.floor(this.score)}`);
+                        document.location.reload();
+                    }, 500);
                 }
             }
             
