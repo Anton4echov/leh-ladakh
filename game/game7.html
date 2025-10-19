@@ -125,38 +125,6 @@
       margin-top: 20px;
       text-align: center;
     }
-
-    .control-hint {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 0.9em;
-      color: #ccc;
-    }
-
-    .touch-controls {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 20px;
-      padding: 10px;
-    }
-
-    .touch-btn {
-      width: 60px;
-      height: 60px;
-      background: rgba(255, 255, 255, 0.3);
-      border: 2px solid white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      color: white;
-      touch-action: manipulation;
-    }
-
-    .touch-btn:active {
-      background: rgba(255, 255, 255, 0.6);
-    }
   </style>
 </head>
 <body>
@@ -175,25 +143,14 @@
   <main>
     <section>
       <h2>Гонки по Ладакху</h2>
-      <p>Прокатитесь на мотоцикле по живописным дорогам Ладакха!</p>
+      <p>Прокатитесь на мотоцикле по живописным дорогам Ладакха! Управляйте стрелками или свайпами на телефоне.</p>
       
       <div class="game-container">
         <canvas id="canvas1"></canvas>
       </div>
-
-      <div class="touch-controls">
-        <div class="touch-btn" id="btnLeft">←</div>
-        <div class="touch-btn" id="btnUp">↑</div>
-        <div class="touch-btn" id="btnDown">↓</div>
-        <div class="touch-btn" id="btnRight">→</div>
-      </div>
-      
-      <div class="control-hint">
-        📱 Управление: Кнопки ниже или свайпы по экрану
-      </div>
       
       <div class="game-info">
-        <p>Управление: стрелки клавиатуры или кнопки на экране</p>
+        <p>Управление: стрелки клавиатуры (↑↓←→) или свайпы на сенсорном экране</p>
         <p>Избегайте коров на дороге! После 19 столкновений игра закончится.</p>
       </div>
     </section>
@@ -245,6 +202,11 @@
         canvas.addEventListener('touchend', function(e) {
           e.preventDefault();
         }, { passive: false });
+        
+        // Try fullscreen (may not work without user gesture)
+        try {
+            document.documentElement.requestFullscreen();
+        } catch (e) { console.log(e); }
 
         class Layer {
             constructor(game, image, speedModifier) {
@@ -272,6 +234,7 @@
                 this.media = document.getElementById('backingtrack_music');
                 this.sound_gaz = document.getElementById('sound_gaz');
                 this.sound_stop = document.getElementById('sound_stop');
+                this.sound_cow = document.getElementById('sound_cow');
                 this.media.volume = 0.5;
                 this.sound_gaz.volume = 0.3;
                 this.sound_stop.volume = 0.3;
@@ -304,29 +267,38 @@
                 this.game = game;
                 this.image = document.getElementById('cow');
                 
+                // Размеры спрайт-листа коровы 1024x1024 с 4 кадрами
                 this.spriteWidth = 1024;
                 this.spriteHeight = 1024;
+                
+                // Размер одного кадра (2 кадра в строке, 2 строки)
                 this.frameWidth = this.spriteWidth / 2;
                 this.frameHeight = this.spriteHeight / 2;
                 
+                // Отображаемый размер коровы
                 this.width = 80;
                 this.height = 80;
                 
-                this.speed = Math.random() * 2 + 0.5;
-                this.x = this.game.width + Math.random() * 200;
+                // РАЗНАЯ СКОРОСТЬ КОРОВ
+                this.speed = Math.random() * 2 + 0.5; // 0.5 - 2.5
                 
+                // РАЗНЫЕ КООРДИНАТЫ НАЧАЛА ДВИЖЕНИЯ КОРОВ
+                this.x = this.game.width + Math.random() * 200; // Разный старт по X
+                
+                // Разные позиции по Y
                 const minY = 50;
                 const maxY = this.game.height - this.height - 50;
                 this.y = Math.random() * (maxY - minY) + minY;
                 
                 this.markedForDeletion = false;
                 
+                // Анимация коровы из 4 кадров
                 this.frameX = 0;
                 this.frameY = 0;
                 this.currentFrame = 0;
                 this.totalFrames = 4;
                 this.frameTimer = 0;
-                this.frameInterval = 150 + Math.random() * 100;
+                this.frameInterval = 150 + Math.random() * 100; // Разная скорость анимации
             }
             
             update(deltaTime) {
@@ -341,10 +313,14 @@
                     this.markedForDeletion = true;
                 }
                 
+                // Анимация коровы - перебор всех 4 кадров
                 if (this.frameTimer > this.frameInterval) {
                     this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
-                    this.frameX = this.currentFrame % 2;
-                    this.frameY = Math.floor(this.currentFrame / 2);
+                    
+                    // Преобразуем общий номер кадра в координаты X и Y
+                    this.frameX = this.currentFrame % 2; // 0 или 1
+                    this.frameY = Math.floor(this.currentFrame / 2); // 0 или 1
+                    
                     this.frameTimer = 0;
                 } else {
                     this.frameTimer += deltaTime;
@@ -352,16 +328,17 @@
             }
             
             draw(context) {
+                // Рисуем текущий кадр коровы из спрайт-листа
                 context.drawImage(
                     this.image,
-                    this.frameX * this.frameWidth,
-                    this.frameY * this.frameHeight,
-                    this.frameWidth,
-                    this.frameHeight,
-                    this.x,
-                    this.y,
-                    this.width,
-                    this.height
+                    this.frameX * this.frameWidth,    // source x
+                    this.frameY * this.frameHeight,   // source y
+                    this.frameWidth,                  // source width
+                    this.frameHeight,                 // source height
+                    this.x,                          // destination x
+                    this.y,                          // destination y
+                    this.width,                      // destination width
+                    this.height                      // destination height
                 );
             }
         }
@@ -395,10 +372,14 @@
         class InputHandler {
             constructor(game) {
                 this.game = game;
+                this.touchId = null;
                 
-                // КНОПКИ УПРАВЛЕНИЯ
-                this.setupTouchButtons();
-                
+                // УЛУЧШЕННЫЕ НАСТРОЙКИ ДЛЯ ПЛАВНОГО УПРАВЛЕНИЯ
+                this.maxSpeed = 8;
+                this.acceleration = 0.1;
+                this.deceleration = 0.05;
+                this.touchSensitivity = 0.8; // Увеличена чувствительность
+
                 // Keyboard controls
                 window.addEventListener('keydown', e => {
                     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key) &&
@@ -414,136 +395,60 @@
                     }
                 });
 
-                // Touch controls для всего экрана
-                let touchStartX = 0;
-                let touchStartY = 0;
-                let isSwiping = false;
-                
-                canvas.addEventListener('touchstart', (e) => {
-                    touchStartX = e.touches[0].clientX;
-                    touchStartY = e.touches[0].clientY;
-                    isSwiping = true;
+                // Touch controls - УПРОЩЕННАЯ СИСТЕМА УПРАВЛЕНИЯ
+                canvas.addEventListener('touchstart', e => {
+                    e.preventDefault();
+                    if (this.touchId === null) {
+                        const touch = e.touches[0];
+                        this.touchId = touch.identifier;
+                        this.game.touchStartY = touch.clientY;
+                        this.game.currentTouchY = touch.clientY;
+                        this.game.touchStartX = touch.clientX;
+                        this.game.currentTouchX = touch.clientX;
+                        this.game.isTouching = true;
+                    }
                 });
 
-                canvas.addEventListener('touchmove', (e) => {
-                    if (!isSwiping) return;
+                canvas.addEventListener('touchmove', e => {
+                    e.preventDefault();
+                    if (!this.game.isTouching) return;
                     
-                    const touchX = e.touches[0].clientX;
-                    const touchY = e.touches[0].clientY;
+                    const touch = Array.from(e.touches).find(t => t.identifier === this.touchId);
+                    if (!touch) return;
                     
-                    const deltaX = touchX - touchStartX;
-                    const deltaY = touchY - touchStartY;
+                    // ПРОСТАЯ СИСТЕМА: вертикальное движение = Y, горизонтальное = X
+                    const deltaY = (touch.clientY - this.game.touchStartY) * this.touchSensitivity * 0.01;
+                    const deltaX = (touch.clientX - this.game.touchStartX) * this.touchSensitivity * 0.01;
                     
-                    // Определяем направление свайпа
-                    if (Math.abs(deltaX) > 20 || Math.abs(deltaY) > 20) {
-                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                            // Горизонтальный свайп
-                            if (deltaX > 0) {
-                                this.game.swipeDirection = 'right';
-                            } else {
-                                this.game.swipeDirection = 'left';
-                            }
-                        } else {
-                            // Вертикальный свайп
-                            if (deltaY > 0) {
-                                this.game.swipeDirection = 'down';
-                            } else {
-                                this.game.swipeDirection = 'up';
-                            }
-                        }
-                    }
+                    // Устанавливаем скорость напрямую
+                    this.game.touchDeltaY = Math.max(-1, Math.min(1, deltaY)) * 3;
+                    this.game.touchDeltaX = Math.max(-1, Math.min(1, deltaX)) * 6;
+                    
+                    this.game.currentTouchY = touch.clientY;
+                    this.game.currentTouchX = touch.clientX;
                 });
 
-                canvas.addEventListener('touchend', () => {
-                    isSwiping = false;
-                    this.game.swipeDirection = null;
-                });
-            }
-
-            setupTouchButtons() {
-                const btnLeft = document.getElementById('btnLeft');
-                const btnRight = document.getElementById('btnRight');
-                const btnUp = document.getElementById('btnUp');
-                const btnDown = document.getElementById('btnDown');
-
-                // Left button
-                btnLeft.addEventListener('touchstart', (e) => {
+                canvas.addEventListener('touchend', e => {
                     e.preventDefault();
-                    if (!this.game.touchButtons.includes('left')) {
-                        this.game.touchButtons.push('left');
-                    }
-                });
-                btnLeft.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    const index = this.game.touchButtons.indexOf('left');
-                    if (index > -1) {
-                        this.game.touchButtons.splice(index, 1);
-                    }
-                });
-
-                // Right button
-                btnRight.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    if (!this.game.touchButtons.includes('right')) {
-                        this.game.touchButtons.push('right');
-                    }
-                });
-                btnRight.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    const index = this.game.touchButtons.indexOf('right');
-                    if (index > -1) {
-                        this.game.touchButtons.splice(index, 1);
-                    }
-                });
-
-                // Up button
-                btnUp.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    if (!this.game.touchButtons.includes('up')) {
-                        this.game.touchButtons.push('up');
-                    }
-                });
-                btnUp.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    const index = this.game.touchButtons.indexOf('up');
-                    if (index > -1) {
-                        this.game.touchButtons.splice(index, 1);
-                    }
-                });
-
-                // Down button
-                btnDown.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    if (!this.game.touchButtons.includes('down')) {
-                        this.game.touchButtons.push('down');
-                    }
-                });
-                btnDown.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    const index = this.game.touchButtons.indexOf('down');
-                    if (index > -1) {
-                        this.game.touchButtons.splice(index, 1);
+                    const touch = Array.from(e.changedTouches).find(t => t.identifier === this.touchId);
+                    if (touch) {
+                        this.game.isTouching = false;
+                        this.touchId = null;
+                        // Плавный сброс скорости при отпускании
+                        this.game.touchDeltaY = 0;
+                        this.game.touchDeltaX = 0;
                     }
                 });
             }
 
             update() {
-                // Обработка свайпов
-                if (this.game.swipeDirection) {
-                    switch(this.game.swipeDirection) {
-                        case 'left':
-                            this.game.player.targetSpeedX = -this.game.player.maxSpeedX;
-                            break;
-                        case 'right':
-                            this.game.player.targetSpeedX = this.game.player.maxSpeedX;
-                            break;
-                        case 'up':
-                            this.game.player.targetSpeedY = -this.game.player.maxSpeedY;
-                            break;
-                        case 'down':
-                            this.game.player.targetSpeedY = this.game.player.maxSpeedY;
-                            break;
-                    }
+                // Плавное замедление при отсутствии касания
+                if (!this.game.isTouching) {
+                    this.game.touchDeltaY *= 0.9;
+                    this.game.touchDeltaX *= 0.9;
+                    
+                    if (Math.abs(this.game.touchDeltaY) < 0.1) this.game.touchDeltaY = 0;
+                    if (Math.abs(this.game.touchDeltaX) < 0.1) this.game.touchDeltaX = 0;
                 }
             }
         }
@@ -552,112 +457,110 @@
             constructor(game) {
                 this.game = game;
                 
-                // УМЕНЬШЕННЫЙ РАЗМЕР ИГРОКА
+                // УМЕНЬШЕННЫЙ РАЗМЕР ИГРОКА НА 30%
                 this.originalWidth = 166;
                 this.originalHeight = 215;
                 this.width = this.originalWidth * 0.7;
                 this.height = this.originalHeight * 0.7;
                 
-                // НАЧАЛЬНАЯ ПОЗИЦИЯ
-                this.x = 50;
-                this.y = this.game.height / 2 - this.height / 2;
+                // СТАРТОВАЯ ПОЗИЦИЯ: 30px от нижнего края
+                this.x = 20;
+                this.y = this.game.height - this.height - 30; // 30px от низа
                 
-                // ГРАНИЦЫ ДВИЖЕНИЯ
-                const margin = 50;
-                this.xLimitRight = this.game.width - this.width - margin;
-                this.xLimitLeft = margin;
-                this.yLimitUp = margin;
-                this.yLimitDown = this.game.height - this.height - margin;
+                // УВЕЛИЧЕННЫЕ ГРАНИЦЫ ДВИЖЕНИЯ
+                const margin = 100;
+                this.xLimitRight = this.game.width - this.width + margin;
+                this.xLimitLeft = -margin;
+                this.yLimitUp = -margin;
+                this.yLimitDown = this.game.height - this.height + margin;
                 
-                // НАСТРОЙКИ ДВИЖЕНИЯ - КОМФОРТНЫЕ
-                this.speedX = 0;
-                this.speedY = 0;
-                this.maxSpeedX = 4; // Уменьшено для комфорта
-                this.maxSpeedY = 2; // Уменьшено для комфорта
-                this.acceleration = 0.1; // Медленное ускорение
-                this.deceleration = 0.05; // Медленное замедление
-                
-                this.targetSpeedX = 0;
-                this.targetSpeedY = 0;
-                
-                this.image = document.getElementById('player');
-                this.collisionCount = 0;
-                
-                // Для плавной анимации
                 this.frameX = 0;
                 this.frameY = 0;
                 this.maxFrame = 2;
                 this.frameTimer = 0;
                 this.frameInterval = 100;
+                
+                // УЛУЧШЕННЫЕ НАСТРОЙКИ ДВИЖЕНИЯ
+                this.speedX = 0;
+                this.speedY = 0;
+                this.maxSpeedY = 3;
+                this.maxSpeedX = 6;
+                
+                this.image = document.getElementById('player');
+                this.collisionCount = 0;
             }
             
             update(deltaTime) {
-                // СБРОС ЦЕЛЕВЫХ СКОРОСТЕЙ
-                this.targetSpeedX = 0;
-                this.targetSpeedY = 0;
-                
-                // КЛАВИАТУРА - приоритет
-                if (this.game.keys.includes('ArrowLeft') || this.game.keys.includes('a')) {
-                    this.targetSpeedX = -this.maxSpeedX;
-                } else if (this.game.keys.includes('ArrowRight') || this.game.keys.includes('d')) {
-                    this.targetSpeedX = this.maxSpeedX;
-                }
-                
+                // Keyboard controls
                 if (this.game.keys.includes('ArrowUp') || this.game.keys.includes('w')) {
-                    this.targetSpeedY = -this.maxSpeedY;
+                    this.speedY = Math.max(-this.maxSpeedY, this.speedY - 0.2);
                 } else if (this.game.keys.includes('ArrowDown') || this.game.keys.includes('s')) {
-                    this.targetSpeedY = this.maxSpeedY;
-                }
-                
-                // TOUCH КНОПКИ
-                if (this.game.touchButtons.includes('left')) {
-                    this.targetSpeedX = -this.maxSpeedX;
-                } else if (this.game.touchButtons.includes('right')) {
-                    this.targetSpeedX = this.maxSpeedX;
-                }
-                
-                if (this.game.touchButtons.includes('up')) {
-                    this.targetSpeedY = -this.maxSpeedY;
-                } else if (this.game.touchButtons.includes('down')) {
-                    this.targetSpeedY = this.maxSpeedY;
-                }
-                
-                // ПЛАВНОЕ ИЗМЕНЕНИЕ СКОРОСТИ
-                if (this.targetSpeedX !== 0) {
-                    this.speedX += (this.targetSpeedX - this.speedX) * this.acceleration;
+                    this.speedY = Math.min(this.maxSpeedY, this.speedY + 0.2);
                 } else {
-                    this.speedX *= (1 - this.deceleration);
+                    // Плавное замедление по Y
+                    this.speedY *= 0.9;
                 }
                 
-                if (this.targetSpeedY !== 0) {
-                    this.speedY += (this.targetSpeedY - this.speedY) * this.acceleration;
+                if (this.game.keys.includes('ArrowLeft') || this.game.keys.includes('a')) {
+                    this.speedX = Math.max(-this.maxSpeedX, this.speedX - 0.2);
+                    this.game.sound_stop_bool = true;
+                    this.game.sound_gaz_bool = false;
+                } else if (this.game.keys.includes('ArrowRight') || this.game.keys.includes('d')) {
+                    this.speedX = Math.min(this.maxSpeedX, this.speedX + 0.2);
+                    this.game.sound_gaz_bool = true;
+                    this.game.sound_stop_bool = false;
                 } else {
-                    this.speedY *= (1 - this.deceleration);
+                    // Плавное замедление по X
+                    this.speedX *= 0.9;
                 }
                 
-                // ОГРАНИЧЕНИЕ СКОРОСТИ
-                this.speedX = Math.max(-this.maxSpeedX, Math.min(this.maxSpeedX, this.speedX));
-                this.speedY = Math.max(-this.maxSpeedY, Math.min(this.maxSpeedY, this.speedY));
+                // Touch controls - ПРОСТАЯ И ПРЕДСКАЗУЕМАЯ СИСТЕМА
+                if (this.game.isTouching) {
+                    // Вертикальное движение = Y, горизонтальное = X
+                    this.speedY = this.game.touchDeltaY;
+                    this.speedX = this.game.touchDeltaX;
+                    
+                    // Управление звуком для касаний
+                    this.game.sound_gaz_bool = this.game.touchDeltaX > 0.5;
+                    this.game.sound_stop_bool = this.game.touchDeltaX < -0.5;
+                }
                 
-                // ДВИЖЕНИЕ
-                this.x += this.speedX;
+                // Дополнительное плавное замедление при отсутствии ввода
+                if (!this.game.isTouching && !this.game.keys.length) {
+                    this.speedX *= 0.9;
+                    this.speedY *= 0.9;
+                    if (Math.abs(this.speedX) < 0.05) this.speedX = 0;
+                    if (Math.abs(this.speedY) < 0.05) this.speedY = 0;
+                    this.game.sound_gaz_bool = false;
+                    this.game.sound_stop_bool = false;
+                }
+                
+                // Movement
                 this.y += this.speedY;
+                this.x += this.speedX;
                 
-                // ГРАНИЦЫ
-                this.x = Math.max(this.xLimitLeft, Math.min(this.xLimitRight, this.x));
-                this.y = Math.max(this.yLimitUp, Math.min(this.yLimitDown, this.y));
+                // Boundaries с увеличенной областью
+                if (this.x < this.xLimitLeft) {
+                    this.x = this.xLimitLeft;
+                    this.speedX = 0;
+                }
+                if (this.x > this.xLimitRight) {
+                    this.x = this.xLimitRight;
+                    this.speedX = 0;
+                }
+                if (this.y > this.yLimitDown) {
+                    this.y = this.yLimitDown;
+                    this.speedY = 0;
+                }
+                if (this.y < this.yLimitUp) {
+                    this.y = this.yLimitUp;
+                    this.speedY = 0;
+                }
                 
-                // Если скорость очень мала - обнуляем для полной остановки
-                if (Math.abs(this.speedX) < 0.1) this.speedX = 0;
-                if (Math.abs(this.speedY) < 0.1) this.speedY = 0;
-                
-                // ЗВУКИ
-                this.game.sound_gaz_bool = this.speedX > 0.5;
-                this.game.sound_stop_bool = this.speedX < -0.5;
-                
-                // АНИМАЦИЯ
+                // Animation
                 if (this.frameTimer > this.frameInterval) {
-                    this.frameX = (this.frameX + 1) % (this.maxFrame + 1);
+                    if (this.frameX < this.maxFrame) this.frameX++;
+                    else this.frameX = 0;
                     this.frameTimer = 0;
                 } else {
                     this.frameTimer += deltaTime;
@@ -667,15 +570,14 @@
             draw(context) {
                 context.drawImage(
                     this.image,
-                    this.frameX * this.originalWidth,
-                    this.frameY * this.originalHeight,
-                    this.originalWidth,
-                    this.originalHeight,
-                    this.x,
-                    this.y,
-                    this.width,
-                    this.height
+                    this.frameX * this.originalWidth, this.frameY * this.originalHeight,
+                    this.originalWidth, this.originalHeight,
+                    this.x, this.y,
+                    this.width, this.height
                 );
+
+                if (this.game.sound_gaz_bool) this.game.music.sound_gaz.play();
+                if (this.game.sound_stop_bool) this.game.music.sound_stop.play();
             }
         }
 
@@ -690,17 +592,24 @@
                 this.cowSpawner = new CowSpawner(this);
                 
                 this.keys = [];
-                this.touchButtons = [];
-                this.swipeDirection = null;
                 this.speed = 1;
                 this.score = 0;
                 this.sound_gaz_bool = false;
                 this.sound_stop_bool = true;
                 this.maxCollisions = 19;
                 
+                // Touch properties
+                this.touchStartY = 0;
+                this.touchStartX = 0;
+                this.currentTouchY = 0;
+                this.currentTouchX = 0;
+                this.touchDeltaY = 0;
+                this.touchDeltaX = 0;
+                this.isTouching = false;
+                
                 // Start music
                 this.music.media.loop = true;
-                this.music.media.play().catch(e => console.log('Autoplay prevented:', e));
+                this.music.media.play();
             }
             
             checkCollision(object1, object2) {
@@ -713,9 +622,10 @@
             }
             
             hitCow() {
-                this.speed *= 0.8;
+                this.speed *= 0.7;
                 this.player.collisionCount++;
                 
+                // Game over after 19 collisions
                 if (this.player.collisionCount >= this.maxCollisions) {
                     alert(`Game Over! Вы сбили ${this.player.collisionCount} коров! Ваш счет: ${Math.floor(this.score)}`);
                     document.location.reload();
@@ -734,45 +644,37 @@
                 
                 // Gradually restore speed after collision
                 if (this.speed < 1) {
-                    this.speed += 0.005;
-                }
-                
-                // ЗВУКИ
-                if (this.sound_gaz_bool) {
-                    this.music.sound_gaz.play();
-                    this.music.sound_stop.pause();
-                } else if (this.sound_stop_bool) {
-                    this.music.sound_stop.play();
-                    this.music.sound_gaz.pause();
-                } else {
-                    this.music.sound_gaz.pause();
-                    this.music.sound_stop.pause();
+                    this.speed += 0.01;
                 }
             }
             
             draw(context) {
+                // Clear canvas
                 context.clearRect(0, 0, this.width, this.height);
                 
+                // Draw game elements
                 this.background.draw(context);
                 this.cowSpawner.draw(context);
                 this.player.draw(context);
                 this.background.layer4.draw(context);
                 
-                // UI
+                // Draw UI
                 context.fillStyle = 'white';
                 context.font = '20px Arial';
                 context.fillText(`Score: ${Math.floor(this.score)}`, 20, 30);
-                context.fillText(`Cows: ${this.player.collisionCount}/${this.maxCollisions}`, 20, 60);
+                context.fillText(`Cows Hit: ${this.player.collisionCount}/${this.maxCollisions}`, 20, 60);
                 
-                // Health bar
+                // ИНДИКАТОР ЗДОРОВЬЯ
                 const healthWidth = 200;
                 const healthHeight = 20;
                 const healthX = this.width - healthWidth - 20;
                 const healthY = 30;
                 
+                // Фон индикатора
                 context.fillStyle = 'rgba(0,0,0,0.5)';
                 context.fillRect(healthX, healthY, healthWidth, healthHeight);
                 
+                // Здоровье (зеленый -> желтый -> красный)
                 const healthPercent = 1 - (this.player.collisionCount / this.maxCollisions);
                 if (healthPercent > 0.6) {
                     context.fillStyle = '#4CAF50';
@@ -783,6 +685,8 @@
                 }
                 
                 context.fillRect(healthX, healthY, healthWidth * healthPercent, healthHeight);
+                
+                // Рамка
                 context.strokeStyle = 'white';
                 context.strokeRect(healthX, healthY, healthWidth, healthHeight);
             }
