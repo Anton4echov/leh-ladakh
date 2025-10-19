@@ -712,6 +712,7 @@
             // Метод для восстановления позиции после столкновения (только X)
             restorePosition() {
                 this.x = this.preCollisionX;
+                this.y = this.game.height - this.height - 30; // вернуть к дорожному уровню
                 // Y позиция НЕ восстанавливается - игрок остается на текущей высоте
             }
             
@@ -858,7 +859,7 @@
                 this.player.collisionCount++;
                 
                 // Восстанавливаем позицию игрока (только X)
-                // this.player.restorePosition();
+                this.player.restorePosition();
                 
                 // Уменьшаем размер игрока
                 this.player.shrink();
