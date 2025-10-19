@@ -117,7 +117,7 @@
     
     /* Hide game assets */
     #layer1, #layer2, #layer3, #layer4, #player, #cow, 
-    #backingtrack_music, #sound_gaz, #sound_stop, #sound_mu {
+    #backingtrack_music, #sound_gaz, #sound_stop, #sound_mu, #sound_moto_back, #sound_az_moto {
       display: none;
     }
 
@@ -161,10 +161,12 @@
   </footer>
   
   <!-- Game assets (hidden) -->
-  <audio id="backingtrack_music" src="african-rock-game.mp3"></audio>
+  <audio id="backingtrack_music" src="game/african-rock-game.mp3"></audio>
   <audio id="sound_gaz" src="gaz-moto.mp3"></audio>
   <audio id="sound_stop" src="stopping-moto.mp3"></audio>
   <audio id="sound_mu" src="mu.mp3"></audio>
+  <audio id="sound_moto_back" src="moto-back.mp3"></audio>
+  <audio id="sound_az_moto" src="gaz-moto.mp3"></audio>
   
   <img id="player" src="player.png">
   <img id="cow" src="cow.png">
@@ -236,10 +238,20 @@
                 this.sound_gaz = document.getElementById('sound_gaz');
                 this.sound_stop = document.getElementById('sound_stop');
                 this.sound_mu = document.getElementById('sound_mu');
+                this.sound_moto_back = document.getElementById('sound_moto_back');
+                this.sound_az_moto = document.getElementById('sound_az_moto');
+                
+                // Настройка громкости
                 this.media.volume = 0.5;
                 this.sound_gaz.volume = 0.3;
                 this.sound_stop.volume = 0.3;
                 this.sound_mu.volume = 0.5;
+                this.sound_moto_back.volume = 0.4;
+                this.sound_az_moto.volume = 0.3;
+                
+                // Настройка цикличности
+                this.media.loop = true;
+                this.sound_moto_back.loop = true;
             }
         }
 
@@ -307,6 +319,9 @@
                 this.collisionTimer = 0;
                 this.collisionDuration = 1000; // 1 секунда анимации при столкновении
                 this.hasCollided = false; // Чтобы столкновение обрабатывалось только один раз
+                
+                // Случайное направление вращения (по часовой или против часовой)
+                this.rotationDirection = Math.random() > 0.5 ? 1 : -1; // 1 = против часовой, -1 = по часовой
             }
             
             update(deltaTime) {
@@ -352,8 +367,8 @@
                 // Если корова сталкивается, рисуем анимацию с поворотом
                 if (this.isColliding) {
                     const progress = this.collisionTimer / this.collisionDuration;
-                    // Вращение на 360 градусов (2π радиан) за время анимации
-                    const rotationAngle = progress * Math.PI * 2;
+                    // Вращение на 360 градусов (2π радиан) за время анимации с учетом направления
+                    const rotationAngle = progress * Math.PI * 2 * this.rotationDirection;
                     
                     context.save();
                     // Перемещаем начало координат в центр коровы
@@ -530,6 +545,10 @@
                 this.x = 20;
                 this.y = this.game.height - this.height - 30; // 30px от низа
                 
+                // Сохраняем позицию для восстановления после столкновения
+                this.preCollisionX = this.x;
+                this.preCollisionY = this.y;
+                
                 // УВЕЛИЧЕННЫЕ ГРАНИЦЫ ДВИЖЕНИЯ
                 const margin = 100;
                 this.xLimitRight = this.game.width - this.width + margin;
@@ -559,6 +578,10 @@
                 this.collisionOffsetY = 15; // Смещение для центрирования
                 
                 this.isVisible = true; // Флаг видимости игрока
+                
+                // Флаги для управления звуками
+                this.wasMovingRight = false;
+                this.wasMovingLeft = false;
             }
             
             // Метод для уменьшения размера игрока
@@ -577,14 +600,28 @@
                     this.collisionOffsetX = (this.width - this.collisionWidth) / 2;
                     this.collisionOffsetY = (this.height - this.collisionHeight) / 2;
                     
+                    // Сохраняем текущую позицию перед обновлением Y
+                    const currentX = this.x;
+                    
                     // Обновляем позицию Y чтобы оставаться у нижнего края
                     this.y = this.game.height - this.height - 30;
+                    
+                    // Восстанавливаем позицию X
+                    this.x = currentX;
                 }
             }
             
             update(deltaTime) {
                 // Если игрок не видим, не обновляем
                 if (!this.isVisible) return;
+                
+                // Сохраняем позицию перед движением
+                this.preCollisionX = this.x;
+                this.preCollisionY = this.y;
+                
+                // Сохраняем состояние движения для звуков
+                const wasMovingRight = this.speedX > 0.5;
+                const wasMovingLeft = this.speedX < -0.5;
                 
                 // Keyboard controls
                 if (this.game.keys.includes('ArrowUp') || this.game.keys.includes('w')) {
@@ -630,6 +667,12 @@
                     this.game.sound_stop_bool = false;
                 }
                 
+                // Воспроизведение звука az-moto.mp3 при ускорении вправо
+                if (this.speedX > 0.5 && !wasMovingRight) {
+                    this.game.music.sound_az_moto.currentTime = 0;
+                    this.game.music.sound_az_moto.play();
+                }
+                
                 // Movement
                 this.y += this.speedY;
                 this.x += this.speedX;
@@ -660,6 +703,12 @@
                 } else {
                     this.frameTimer += deltaTime;
                 }
+            }
+            
+            // Метод для восстановления позиции после столкновения
+            restorePosition() {
+                this.x = this.preCollisionX;
+                this.y = this.preCollisionY;
             }
             
             draw(context) {
@@ -773,6 +822,8 @@
                 // Start music
                 this.music.media.loop = true;
                 this.music.media.play();
+                this.music.sound_moto_back.loop = true;
+                this.music.sound_moto_back.play();
             }
             
             checkCollision(object1, object2) {
@@ -797,6 +848,9 @@
                 
                 this.speed *= 0.7;
                 this.player.collisionCount++;
+                
+                // Восстанавливаем позицию игрока
+                this.player.restorePosition();
                 
                 // Уменьшаем размер игрока
                 this.player.shrink();
