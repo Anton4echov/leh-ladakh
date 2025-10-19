@@ -125,14 +125,6 @@
       margin-top: 20px;
       text-align: center;
     }
-
-    .touch-controls-info {
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 10px;
-      font-size: 0.9rem;
-    }
   </style>
 </head>
 <body>
@@ -160,12 +152,6 @@
       <div class="game-info">
         <p>Управление: стрелки клавиатуры (↑↓←→) или свайпы на сенсорном экране</p>
         <p>Избегайте коров на дороге! После 19 столкновений игра закончится.</p>
-        <div class="touch-controls-info">
-          <strong>Сенсорное управление:</strong><br>
-          • Двигайте пальцем влево/вправо для ускорения/торможения<br>
-          • Двигайте пальцем вверх/вниз для движения по вертикали<br>
-          • Отпустите для плавного замедления
-        </div>
       </div>
     </section>
   </main>
@@ -388,13 +374,11 @@
                 this.game = game;
                 this.touchId = null;
                 
-                // НАСТРОЙКИ УСКОРЕНИЯ ДЛЯ СЕНСОРНОГО УПРАВЛЕНИЯ
-                this.touchAccelerationX = 0.15;
-                this.touchAccelerationY = 0.1;
-                this.touchDeceleration = 0.05;
-                this.maxTouchSpeedX = 6;
-                this.maxTouchSpeedY = 3;
-                this.touchSensitivity = 1.5;
+                // УЛУЧШЕННЫЕ НАСТРОЙКИ ДЛЯ ПЛАВНОГО УПРАВЛЕНИЯ
+                this.maxSpeed = 8;
+                this.acceleration = 0.1;
+                this.deceleration = 0.05;
+                this.touchSensitivity = 0.8; // Увеличена чувствительность
 
                 // Keyboard controls
                 window.addEventListener('keydown', e => {
@@ -411,7 +395,7 @@
                     }
                 });
 
-                // Touch controls - СИСТЕМА С НАСТОЯЩИМ УСКОРЕНИЕМ
+                // Touch controls - УПРОЩЕННАЯ СИСТЕМА УПРАВЛЕНИЯ
                 canvas.addEventListener('touchstart', e => {
                     e.preventDefault();
                     if (this.touchId === null) {
@@ -422,10 +406,6 @@
                         this.game.touchStartX = touch.clientX;
                         this.game.currentTouchX = touch.clientX;
                         this.game.isTouching = true;
-                        
-                        // Сбрасываем целевые скорости при новом касании
-                        this.game.targetSpeedX = 0;
-                        this.game.targetSpeedY = 0;
                     }
                 });
 
@@ -436,13 +416,13 @@
                     const touch = Array.from(e.touches).find(t => t.identifier === this.touchId);
                     if (!touch) return;
                     
-                    // Вычисляем смещение от начальной точки касания
+                    // ПРОСТАЯ СИСТЕМА: вертикальное движение = Y, горизонтальное = X
                     const deltaY = (touch.clientY - this.game.touchStartY) * this.touchSensitivity * 0.01;
                     const deltaX = (touch.clientX - this.game.touchStartX) * this.touchSensitivity * 0.01;
                     
-                    // Устанавливаем целевую скорость на основе смещения
-                    this.game.targetSpeedY = Math.max(-this.maxTouchSpeedY, Math.min(this.maxTouchSpeedY, deltaY * 10));
-                    this.game.targetSpeedX = Math.max(-this.maxTouchSpeedX, Math.min(this.maxTouchSpeedX, deltaX * 10));
+                    // Устанавливаем скорость напрямую
+                    this.game.touchDeltaY = Math.max(-1, Math.min(1, deltaY)) * 3;
+                    this.game.touchDeltaX = Math.max(-1, Math.min(1, deltaX)) * 6;
                     
                     this.game.currentTouchY = touch.clientY;
                     this.game.currentTouchX = touch.clientX;
@@ -454,50 +434,21 @@
                     if (touch) {
                         this.game.isTouching = false;
                         this.touchId = null;
-                        // Плавный сброс целевой скорости при отпускании
-                        this.game.targetSpeedX = 0;
-                        this.game.targetSpeedY = 0;
+                        // Плавный сброс скорости при отпускании
+                        this.game.touchDeltaY = 0;
+                        this.game.touchDeltaX = 0;
                     }
                 });
             }
 
             update() {
-                // Плавное ускорение к целевой скорости при касании
-                if (this.game.isTouching) {
-                    // Горизонтальное движение с ускорением
-                    if (this.game.touchSpeedX < this.game.targetSpeedX) {
-                        this.game.touchSpeedX = Math.min(this.game.targetSpeedX, 
-                            this.game.touchSpeedX + this.touchAccelerationX);
-                    } else if (this.game.touchSpeedX > this.game.targetSpeedX) {
-                        this.game.touchSpeedX = Math.max(this.game.targetSpeedX, 
-                            this.game.touchSpeedX - this.touchAccelerationX);
-                    }
+                // Плавное замедление при отсутствии касания
+                if (!this.game.isTouching) {
+                    this.game.touchDeltaY *= 0.9;
+                    this.game.touchDeltaX *= 0.9;
                     
-                    // Вертикальное движение с ускорением
-                    if (this.game.touchSpeedY < this.game.targetSpeedY) {
-                        this.game.touchSpeedY = Math.min(this.game.targetSpeedY, 
-                            this.game.touchSpeedY + this.touchAccelerationY);
-                    } else if (this.game.touchSpeedY > this.game.targetSpeedY) {
-                        this.game.touchSpeedY = Math.max(this.game.targetSpeedY, 
-                            this.game.touchSpeedY - this.touchAccelerationY);
-                    }
-                } else {
-                    // Плавное замедление при отсутствии касания
-                    if (this.game.touchSpeedX > 0) {
-                        this.game.touchSpeedX = Math.max(0, this.game.touchSpeedX - this.touchDeceleration);
-                    } else if (this.game.touchSpeedX < 0) {
-                        this.game.touchSpeedX = Math.min(0, this.game.touchSpeedX + this.touchDeceleration);
-                    }
-                    
-                    if (this.game.touchSpeedY > 0) {
-                        this.game.touchSpeedY = Math.max(0, this.game.touchSpeedY - this.touchDeceleration);
-                    } else if (this.game.touchSpeedY < 0) {
-                        this.game.touchSpeedY = Math.min(0, this.game.touchSpeedY + this.touchDeceleration);
-                    }
-                    
-                    // Полная остановка при очень малых скоростях
-                    if (Math.abs(this.game.touchSpeedX) < 0.05) this.game.touchSpeedX = 0;
-                    if (Math.abs(this.game.touchSpeedY) < 0.05) this.game.touchSpeedY = 0;
+                    if (Math.abs(this.game.touchDeltaY) < 0.1) this.game.touchDeltaY = 0;
+                    if (Math.abs(this.game.touchDeltaX) < 0.1) this.game.touchDeltaX = 0;
                 }
             }
         }
@@ -529,71 +480,55 @@
                 this.frameTimer = 0;
                 this.frameInterval = 100;
                 
-                // НАСТРОЙКИ ДВИЖЕНИЯ С УСКОРЕНИЕМ
+                // УЛУЧШЕННЫЕ НАСТРОЙКИ ДВИЖЕНИЯ
                 this.speedX = 0;
                 this.speedY = 0;
                 this.maxSpeedY = 3;
                 this.maxSpeedX = 6;
-                this.acceleration = 0.2;
-                this.deceleration = 0.1;
                 
                 this.image = document.getElementById('player');
                 this.collisionCount = 0;
             }
             
             update(deltaTime) {
-                // Keyboard controls (остаются без изменений)
+                // Keyboard controls
                 if (this.game.keys.includes('ArrowUp') || this.game.keys.includes('w')) {
-                    this.speedY = Math.max(-this.maxSpeedY, this.speedY - this.acceleration);
+                    this.speedY = Math.max(-this.maxSpeedY, this.speedY - 0.2);
                 } else if (this.game.keys.includes('ArrowDown') || this.game.keys.includes('s')) {
-                    this.speedY = Math.min(this.maxSpeedY, this.speedY + this.acceleration);
+                    this.speedY = Math.min(this.maxSpeedY, this.speedY + 0.2);
                 } else {
                     // Плавное замедление по Y
-                    this.speedY *= (1 - this.deceleration);
+                    this.speedY *= 0.9;
                 }
                 
                 if (this.game.keys.includes('ArrowLeft') || this.game.keys.includes('a')) {
-                    this.speedX = Math.max(-this.maxSpeedX, this.speedX - this.acceleration);
+                    this.speedX = Math.max(-this.maxSpeedX, this.speedX - 0.2);
                     this.game.sound_stop_bool = true;
                     this.game.sound_gaz_bool = false;
                 } else if (this.game.keys.includes('ArrowRight') || this.game.keys.includes('d')) {
-                    this.speedX = Math.min(this.maxSpeedX, this.speedX + this.acceleration);
+                    this.speedX = Math.min(this.maxSpeedX, this.speedX + 0.2);
                     this.game.sound_gaz_bool = true;
                     this.game.sound_stop_bool = false;
                 } else {
                     // Плавное замедление по X
-                    this.speedX *= (1 - this.deceleration);
+                    this.speedX *= 0.9;
                 }
                 
-                // Touch controls - СИСТЕМА С НАСТОЯЩИМ УСКОРЕНИЕМ
-                if (this.game.isTouching || this.game.touchSpeedX !== 0 || this.game.touchSpeedY !== 0) {
-                    // Плавное изменение скорости до целевой скорости касания
-                    const touchAccel = 0.1;
-                    
-                    // Горизонтальное движение
-                    if (this.speedX < this.game.touchSpeedX) {
-                        this.speedX = Math.min(this.game.touchSpeedX, this.speedX + touchAccel);
-                    } else if (this.speedX > this.game.touchSpeedX) {
-                        this.speedX = Math.max(this.game.touchSpeedX, this.speedX - touchAccel);
-                    }
-                    
-                    // Вертикальное движение
-                    if (this.speedY < this.game.touchSpeedY) {
-                        this.speedY = Math.min(this.game.touchSpeedY, this.speedY + touchAccel);
-                    } else if (this.speedY > this.game.touchSpeedY) {
-                        this.speedY = Math.max(this.game.touchSpeedY, this.speedY - touchAccel);
-                    }
+                // Touch controls - ПРОСТАЯ И ПРЕДСКАЗУЕМАЯ СИСТЕМА
+                if (this.game.isTouching) {
+                    // Вертикальное движение = Y, горизонтальное = X
+                    this.speedY = this.game.touchDeltaY;
+                    this.speedX = this.game.touchDeltaX;
                     
                     // Управление звуком для касаний
-                    this.game.sound_gaz_bool = this.game.touchSpeedX > 0.5;
-                    this.game.sound_stop_bool = this.game.touchSpeedX < -0.5;
+                    this.game.sound_gaz_bool = this.game.touchDeltaX > 0.5;
+                    this.game.sound_stop_bool = this.game.touchDeltaX < -0.5;
                 }
                 
                 // Дополнительное плавное замедление при отсутствии ввода
-                if (!this.game.isTouching && !this.game.keys.length && 
-                    Math.abs(this.game.touchSpeedX) < 0.1 && Math.abs(this.game.touchSpeedY) < 0.1) {
-                    this.speedX *= (1 - this.deceleration);
-                    this.speedY *= (1 - this.deceleration);
+                if (!this.game.isTouching && !this.game.keys.length) {
+                    this.speedX *= 0.9;
+                    this.speedY *= 0.9;
                     if (Math.abs(this.speedX) < 0.05) this.speedX = 0;
                     if (Math.abs(this.speedY) < 0.05) this.speedY = 0;
                     this.game.sound_gaz_bool = false;
@@ -663,15 +598,13 @@
                 this.sound_stop_bool = true;
                 this.maxCollisions = 19;
                 
-                // Touch properties - ДОБАВЛЕНЫ СВОЙСТВА ДЛЯ УСКОРЕНИЯ
+                // Touch properties
                 this.touchStartY = 0;
                 this.touchStartX = 0;
                 this.currentTouchY = 0;
                 this.currentTouchX = 0;
-                this.touchSpeedY = 0;    // Текущая скорость по Y
-                this.touchSpeedX = 0;    // Текущая скорость по X
-                this.targetSpeedY = 0;   // Целевая скорость по Y
-                this.targetSpeedX = 0;   // Целевая скорость по X
+                this.touchDeltaY = 0;
+                this.touchDeltaX = 0;
                 this.isTouching = false;
                 
                 // Start music
@@ -756,11 +689,6 @@
                 // Рамка
                 context.strokeStyle = 'white';
                 context.strokeRect(healthX, healthY, healthWidth, healthHeight);
-                
-                // Отладочная информация (можно удалить в финальной версии)
-                if (this.isTouching) {
-                    context.fillText(`Touch: X=${this.touchSpeedX.toFixed(1)}, Y=${this.touchSpeedY.toFixed(1)}`, 20, 90);
-                }
             }
         }
         
