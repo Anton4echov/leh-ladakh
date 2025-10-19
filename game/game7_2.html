@@ -304,39 +304,44 @@
                 this.isColliding = false;
                 this.collisionTimer = 0;
                 this.collisionDuration = 1000; // 1 секунда анимации при столкновении
+                this.hasCollided = false; // Чтобы столкновение обрабатывалось только один раз
             }
             
             update(deltaTime) {
-                this.x -= this.speed + this.game.speed;
-                
-                if (this.x < -this.width) {
-                    this.markedForDeletion = true;
-                }
-                
-                if (this.game.checkCollision(this, this.game.player)) {
-                    this.game.hitCow();
-                    this.isColliding = true;
-                    this.markedForDeletion = true;
-                }
-                
-                // Анимация коровы - перебор всех 4 кадров
-                if (this.frameTimer > this.frameInterval) {
-                    this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
-                    
-                    // Преобразуем общий номер кадра в координаты X и Y
-                    this.frameX = this.currentFrame % 2; // 0 или 1
-                    this.frameY = Math.floor(this.currentFrame / 2); // 0 или 1
-                    
-                    this.frameTimer = 0;
-                } else {
-                    this.frameTimer += deltaTime;
-                }
-                
-                // Обновление таймера анимации при столкновении
+                // Если корова сталкивается, останавливаем движение и запускаем анимацию
                 if (this.isColliding) {
                     this.collisionTimer += deltaTime;
                     if (this.collisionTimer > this.collisionDuration) {
-                        this.isColliding = false;
+                        this.markedForDeletion = true;
+                    }
+                    // Останавливаем анимацию ходьбы при столкновении
+                    this.frameTimer = 0;
+                } else {
+                    // Обычное движение
+                    this.x -= this.speed + this.game.speed;
+                    
+                    if (this.x < -this.width) {
+                        this.markedForDeletion = true;
+                    }
+                    
+                    // Проверка столкновения (только если еще не сталкивались)
+                    if (!this.hasCollided && this.game.checkCollision(this, this.game.player)) {
+                        this.game.hitCow();
+                        this.isColliding = true;
+                        this.hasCollided = true;
+                    }
+                    
+                    // Анимация коровы - перебор всех 4 кадров
+                    if (this.frameTimer > this.frameInterval) {
+                        this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+                        
+                        // Преобразуем общий номер кадра в координаты X и Y
+                        this.frameX = this.currentFrame % 2; // 0 или 1
+                        this.frameY = Math.floor(this.currentFrame / 2); // 0 или 1
+                        
+                        this.frameTimer = 0;
+                    } else {
+                        this.frameTimer += deltaTime;
                     }
                 }
             }
@@ -345,7 +350,8 @@
                 // Если корова сталкивается, рисуем анимацию с поворотом
                 if (this.isColliding) {
                     const progress = this.collisionTimer / this.collisionDuration;
-                    const rotationAngle = progress * Math.PI * 2; // Полный оборот за время анимации
+                    // Вращение на 360 градусов (2π радиан) за время анимации
+                    const rotationAngle = progress * Math.PI * 2;
                     
                     context.save();
                     // Перемещаем начало координат в центр коровы
