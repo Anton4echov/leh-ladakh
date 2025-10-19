@@ -577,6 +577,9 @@
                 this.collisionOffsetX = 15; // Смещение для центрирования
                 this.collisionOffsetY = 15; // Смещение для центрирования
                 
+                // РАЗМЕР ТРЕУГОЛЬНИКА ДЛЯ ВЫРЕЗАНИЯ (15% от высоты игрока)
+                this.triangleSize = this.height * 0.15;
+                
                 this.isVisible = true; // Флаг видимости игрока
                 
                 // Флаги для управления звуками
@@ -599,6 +602,9 @@
                     this.collisionHeight = Math.max(10, this.height - 30);
                     this.collisionOffsetX = (this.width - this.collisionWidth) / 2;
                     this.collisionOffsetY = (this.height - this.collisionHeight) / 2;
+                    
+                    // Обновляем размер треугольника (15% от новой высоты)
+                    this.triangleSize = this.height * 0.15;
                     
                     // Сохраняем текущую позицию перед обновлением Y
                     const currentX = this.x;
@@ -737,10 +743,14 @@
                         this.collisionHeight
                     );
                     
-                    // Вырезание правого верхнего треугольника
-                    context.moveTo(this.x + this.width - 10, this.y + this.collisionOffsetY);
-                    context.lineTo(this.x + this.width - this.collisionOffsetX, this.y + this.collisionOffsetY);
-                    context.lineTo(this.x + this.width - this.collisionOffsetX, this.y + this.collisionOffsetY + 10);
+                    // Вырезание правого верхнего треугольника (15% от высоты игрока)
+                    const triangleStartX = this.x + this.collisionOffsetX + this.collisionWidth - this.triangleSize;
+                    const triangleEndX = this.x + this.collisionOffsetX + this.collisionWidth;
+                    const triangleEndY = this.y + this.collisionOffsetY + this.triangleSize;
+                    
+                    context.moveTo(triangleStartX, this.y + this.collisionOffsetY);
+                    context.lineTo(triangleEndX, this.y + this.collisionOffsetY);
+                    context.lineTo(triangleEndX, triangleEndY);
                     context.closePath();
                     
                     context.stroke();
@@ -750,7 +760,7 @@
                 if (this.game.sound_stop_bool) this.game.music.sound_stop.play();
             }
             
-            // Метод для проверки коллизии с учетом вырезанного треугольника
+            // Метод для проверки коллизии с учетом вырезанного треугольника (15% от высоты)
             checkCollision(object) {
                 // Если игрок не видим, коллизий нет
                 if (!this.isVisible) return false;
@@ -771,15 +781,15 @@
                     return false;
                 }
                 
-                // Проверка на попадание в вырезанный треугольник
-                const triangleStartX = playerRight - 10; // Начало треугольника
+                // Проверка на попадание в вырезанный треугольник (15% от высоты игрока)
+                const triangleStartX = playerRight - this.triangleSize; // Начало треугольника
                 const triangleEndX = playerRight; // Конец треугольника
-                const triangleEndY = playerTop + 10; // Высота треугольника
+                const triangleEndY = playerTop + this.triangleSize; // Высота треугольника
                 
                 // Если объект находится в области треугольника
                 if (objectLeft > triangleStartX && objectTop < triangleEndY) {
                     // Проверяем, находится ли объект выше диагонали треугольника
-                    const triangleSlope = 1; // Наклон 45 градусов (10px по X = 10px по Y)
+                    const triangleSlope = 1; // Наклон 45 градусов
                     const relativeX = objectRight - triangleStartX;
                     const maxAllowedY = playerTop + relativeX * triangleSlope;
                     
@@ -849,7 +859,7 @@
                 this.speed *= 0.7;
                 this.player.collisionCount++;
                 
-                // Восстанавливаем позицию игрока
+                // Восстанавливаем позицию игрока (возвращаем на место до столкновения)
                 this.player.restorePosition();
                 
                 // Уменьшаем размер игрока
