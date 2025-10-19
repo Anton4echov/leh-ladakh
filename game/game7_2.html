@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Игра "Ladakh Rider" - Кто в Лех, кто по дрова?</title>
+  <link rel="icon" href="IMG_20231118_212542_728.ico" type="image/x-icon">
+  <meta name="description" content="Игра от сообщества русскоязычных путешественников в Гималаях, Тибете и Ладаке." />
+  <meta property="og:image" content="https://cdn.glitch.global/bea12857-f511-461d-adbc-da5b46687f87/IMG_20231118_212542_728.jpg?v=1750048499482">
+  <link rel="icon" href="IMG_20231118_212542_728.ico" type="image/x-icon">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      height: 100%;
+      touch-action: manipulation;
+    }
+    
+    body {
+      font-family: 'Lora', serif;
+      color: #fff;
+      background: url('https://cdn.glitch.global/bea12857-f511-461d-adbc-da5b46687f87/IMG_20231118_212542_728.jpg?v=1750048499482') no-repeat center center fixed;
+      background-size: cover;
+      line-height: 1.6;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    header {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      text-align: center;
+    }
+    
+    h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+    
+    h2, p {
+      text-align: center;
+    }
+    
+    main {
+      background: rgba(0, 0, 0, 0.5);
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      border-radius: 8px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .game-container {
+      position: relative;
+      width: 100%;
+      height: 50vh;
+      margin: 20px auto;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    #canvas1 {
+      display: block; 
+      background: black; 
+      width: 100%;
+      height: 100%;
+      background: rgb(122, 122, 177);
+      touch-action: none;
+    }
+    
+    .admin-link-leh {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #00b2ff;
+      text-decoration: none;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    
+    .admin-link-leh svg{
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+      fill: #00b2ff;
+    }
+    
+    a {
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.1em;
+      padding: 10px 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
+      transition: background 0.3s ease;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 10px;
+      color: black;
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.7);
+    }
+    
+    /* Hide game assets */
+    #layer1, #layer2, #layer3, #layer4, #player, #cow, 
+    #backingtrack_music, #sound_gaz, #sound_stop {
+      display: none;
+    }
+
+    .game-info {
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Игра "Ladakh Rider" от сообщества "Кто в Лех, кто по дрова?"</h1><br>
+    <a href="https://t.me/leh_ladak" class="admin-link-leh" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.371 0 0 5.371 0 12s5.371 12 12 12 12-5.371 12-12S18.629 0 12 0zm5.963 7.57l-1.79 8.427c-.135.582-.485.726-1.008.452l-2.792-2.063-1.346 1.296c-.148.147-.271.271-.555.271l.2-2.869 5.217-4.71c.226-.2-.05-.312-.35-.112l-6.453 4.063-2.773-.865c-.602-.185-.613-.602.127-.89l10.843-4.18c.503-.185.944.112.783.883z"/></svg>
+      Наш Telegram-канал
+    </a>
+    <a href="../index.html" class="admin-link-leh" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.371 0 0 5.371 0 12s5.371 12 12 12 12-5.371 12-12S18.629 0 12 0zm5.963 7.57l-1.79 8.427c-.135.582-.485.726-1.008.452l-2.792-2.063-1.346 1.296c-.148.147-.271.271-.555.271l.2-2.869 5.217-4.71c.226-.2-.05-.312-.35-.112l-6.453 4.063-2.773-.865c-.602-.185-.613-.602.127-.89l10.843-4.18c.503-.185.944.112.783.883z"/></svg>
+      На главную
+    </a>
+  </header>
+  
+  <main>
+    <section>
+      <h2>Гонки по Ладакху</h2>
+      <p>Прокатитесь на мотоцикле по живописным дорогам Ладакха! Управляйте стрелками или свайпами на телефоне.</p>
+      
+      <div class="game-container">
+        <canvas id="canvas1"></canvas>
+      </div>
+      
+      <div class="game-info">
+        <p>Управление: стрелки клавиатуры (↑↓←→) или свайпы на сенсорном экране</p>
+        <p>Избегайте коров на дороге! После 19 столкновений игра закончится.</p>
+      </div>
+    </section>
+  </main>
+  
+  <footer>
+    &copy; 2025 Кто в Лех, кто по дрова?
+  </footer>
+  
+  <!-- Game assets (hidden) -->
+  <audio id="backingtrack_music" src="african-rock-game.mp3"></audio>
+  <audio id="sound_gaz" src="gaz-moto.mp3"></audio>
+  <audio id="sound_stop" src="stopping-moto.mp3"></audio>
+  
+  <img id="player" src="player.png">
+  <img id="cow" src="cow.png">
+  <img id="layer1" src="layer1.png">
+  <img id="layer2" src="layer2.png">
+  <img id="layer3" src="layer3.png">
+  <img id="layer4" src="layer4.png">
+
+  <script>
+    window.addEventListener('load', function() {
+        const canvas = document.getElementById('canvas1');
+        const ctx = canvas.getContext('2d');
+        
+        // Устанавливаем размеры canvas в соответствии с контейнером
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        // Инициализируем размеры canvas
+        resizeCanvas();
+        
+        // Обрабатываем изменение размера окна
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Предотвращаем стандартное поведение касания на canvas
+        canvas.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+        }, { passive: false });
+        
+        canvas.addEventListener('touchmove', function(e) {
+          e.preventDefault();
+        }, { passive: false });
+        
+        canvas.addEventListener('touchend', function(e) {
+          e.preventDefault();
+        }, { passive: false });
+        
+        // Try fullscreen (may not work without user gesture)
+        try {
+            document.documentElement.requestFullscreen();
+        } catch (e) { console.log(e); }
+
+        class Layer {
+            constructor(game, image, speedModifier) {
+                this.game = game;
+                this.image = image;
+                this.speedModifier = speedModifier;
+                this.width = 1768;
+                this.height = 500;
+                this.x = 0;
+                this.y = 0;
+            }
+            update() {
+                if (this.x <= -this.width) this.x = 0;
+                else this.x -= this.game.speed * this.speedModifier;
+            }
+            draw(context) {
+                context.drawImage(this.image, this.x, this.y, this.width, this.height);
+                context.drawImage(this.image, this.x + this.width, this.y, this.width, this.height);
+            }
+        }
+
+        class Music {
+            constructor(game) {
+                this.game = game;
+                this.media = document.getElementById('backingtrack_music');
+                this.sound_gaz = document.getElementById('sound_gaz');
+                this.sound_stop = document.getElementById('sound_stop');
+                this.sound_cow = document.getElementById('sound_cow');
+                this.media.volume = 0.5;
+                this.sound_gaz.volume = 0.3;
+                this.sound_stop.volume = 0.3;
+            }
+        }
+
+        class Background {
+            constructor(game) {
+                this.game = game;
+                this.image1 = document.getElementById('layer1');
+                this.image2 = document.getElementById('layer2');
+                this.image3 = document.getElementById('layer3');
+                this.image4 = document.getElementById('layer4');
+                this.layer1 = new Layer(this.game, this.image1, 0.2);
+                this.layer2 = new Layer(this.game, this.image2, 0.5);
+                this.layer3 = new Layer(this.game, this.image3, 1);
+                this.layer4 = new Layer(this.game, this.image4, 1.7);
+                this.layers = [this.layer1, this.layer2, this.layer3];
+            }
+            update() {
+                this.layers.forEach(layer => layer.update());
+            }
+            draw(context) {
+                this.layers.forEach(layer => layer.draw(context));
+            }
+        }
+
+        class Cow {
+            constructor(game, xOffset = 0) {
+                this.game = game;
+                this.image = document.getElementById('cow');
+                
+                // Размеры спрайт-листа коровы 1024x1024 с 4 кадрами
+                this.spriteWidth = 1024;
+                this.spriteHeight = 1024;
+                
+                // Размер одного кадра (2 кадра в строке, 2 строки)
+                this.frameWidth = this.spriteWidth / 2;
+                this.frameHeight = this.spriteHeight / 2;
+                
+                // Отображаемый размер коровы
+                this.width = 80;
+                this.height = 80;
+                
+                // УМЕНЬШЕННАЯ СКОРОСТЬ КОРОВ НА 30%
+                this.speed = Math.random() * 1.4 + 0.35; // 0.35 - 1.75 (было 0.5 - 2.5)
+                
+                // РАЗНЫЕ КООРДИНАТЫ НАЧАЛА ДВИЖЕНИЯ КОРОВ
+                this.x = this.game.width + Math.random() * 200 + xOffset; // Разный старт по X
+                
+                // Разные позиции по Y
+                const minY = 50;
+                const maxY = this.game.height - this.height - 50;
+                this.y = Math.random() * (maxY - minY) + minY;
+                
+                this.markedForDeletion = false;
+                
+                // УСКОРЕННАЯ АНИМАЦИЯ КОРОВЫ В 2 РАЗА
+                this.frameX = 0;
+                this.frameY = 0;
+                this.currentFrame = 0;
+                this.totalFrames = 4;
+                this.frameTimer = 0;
+                this.frameInterval = 75 + Math.random() * 50; // Было 150 + Math.random() * 100
+                
+                // Флаг для анимации при столкновении
+                this.isColliding = false;
+                this.collisionTimer = 0;
+                this.collisionDuration = 1000; // 1 секунда анимации при столкновении
+            }
+            
+            update(deltaTime) {
+                this.x -= this.speed + this.game.speed;
+                
+                if (this.x < -this.width) {
+                    this.markedForDeletion = true;
+                }
+                
+                if (this.game.checkCollision(this, this.game.player)) {
+                    this.game.hitCow();
+                    this.isColliding = true;
+                    this.markedForDeletion = true;
+                }
+                
+                // Анимация коровы - перебор всех 4 кадров
+                if (this.frameTimer > this.frameInterval) {
+                    this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+                    
+                    // Преобразуем общий номер кадра в координаты X и Y
+                    this.frameX = this.currentFrame % 2; // 0 или 1
+                    this.frameY = Math.floor(this.currentFrame / 2); // 0 или 1
+                    
+                    this.frameTimer = 0;
+                } else {
+                    this.frameTimer += deltaTime;
+                }
+                
+                // Обновление таймера анимации при столкновении
+                if (this.isColliding) {
+                    this.collisionTimer += deltaTime;
+                    if (this.collisionTimer > this.collisionDuration) {
+                        this.isColliding = false;
+                    }
+                }
+            }
+            
+            draw(context) {
+                // Если корова сталкивается, рисуем анимацию с поворотом
+                if (this.isColliding) {
+                    const progress = this.collisionTimer / this.collisionDuration;
+                    const rotationAngle = progress * Math.PI * 2; // Полный оборот за время анимации
+                    
+                    context.save();
+                    // Перемещаем начало координат в центр коровы
+                    context.translate(this.x + this.width / 2, this.y + this.height / 2);
+                    // Поворачиваем на соответствующий угол
+                    context.rotate(rotationAngle);
+                    
+                    // Рисуем текущий кадр коровы из спрайт-листа с центрированием
+                    context.drawImage(
+                        this.image,
+                        this.frameX * this.frameWidth,    // source x
+                        this.frameY * this.frameHeight,   // source y
+                        this.frameWidth,                  // source width
+                        this.frameHeight,                 // source height
+                        -this.width / 2,                 // destination x (центрирование)
+                        -this.height / 2,                // destination y (центрирование)
+                        this.width,                      // destination width
+                        this.height                      // destination height
+                    );
+                    
+                    context.restore();
+                } else {
+                    // Обычная отрисовка без поворота
+                    context.drawImage(
+                        this.image,
+                        this.frameX * this.frameWidth,    // source x
+                        this.frameY * this.frameHeight,   // source y
+                        this.frameWidth,                  // source width
+                        this.frameHeight,                 // source height
+                        this.x,                          // destination x
+                        this.y,                          // destination y
+                        this.width,                      // destination width
+                        this.height                      // destination height
+                    );
+                }
+            }
+        }
+        
+        class CowSpawner {
+            constructor(game) {
+                this.game = game;
+                this.cows = [];
+                this.spawnTimer = 0;
+                this.spawnInterval = 1500;
+            }
+            
+            update(deltaTime) {
+                if (this.spawnTimer > this.spawnInterval) {
+                    // Случайное определение группы коров (1, 2 или 3)
+                    const groupSize = Math.random() < 0.3 ? (Math.random() < 0.5 ? 2 : 3) : 1;
+                    
+                    for (let i = 0; i < groupSize; i++) {
+                        // Смещение по X для каждой коровы в группе (5px между ними)
+                        const xOffset = i * (80 + 5); // ширина коровы + расстояние
+                        this.cows.push(new Cow(this.game, xOffset));
+                    }
+                    
+                    this.spawnTimer = 0;
+                    this.spawnInterval = 1000 + Math.random() * 2000;
+                } else {
+                    this.spawnTimer += deltaTime;
+                }
+                
+                this.cows.forEach(cow => cow.update(deltaTime));
+                this.cows = this.cows.filter(cow => !cow.markedForDeletion);
+            }
+            
+            draw(context) {
+                this.cows.forEach(cow => cow.draw(context));
+            }
+        }
+
+        class InputHandler {
+            constructor(game) {
+                this.game = game;
+                this.touchId = null;
+                
+                // УЛУЧШЕННЫЕ НАСТРОЙКИ ДЛЯ ПЛАВНОГО УПРАВЛЕНИЯ
+                this.maxSpeed = 8;
+                this.acceleration = 0.1;
+                this.deceleration = 0.05;
+                this.touchSensitivity = 0.8; // Увеличена чувствительность
+
+                // Keyboard controls
+                window.addEventListener('keydown', e => {
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key) &&
+                        !this.game.keys.includes(e.key)) {
+                        this.game.keys.push(e.key);
+                    }
+                });
+                
+                window.addEventListener('keyup', e => {
+                    const index = this.game.keys.indexOf(e.key);
+                    if (index > -1) {
+                        this.game.keys.splice(index, 1);
+                    }
+                });
+
+                // Touch controls - УПРОЩЕННАЯ СИСТЕМА УПРАВЛЕНИЯ
+                canvas.addEventListener('touchstart', e => {
+                    e.preventDefault();
+                    if (this.touchId === null) {
+                        const touch = e.touches[0];
+                        this.touchId = touch.identifier;
+                        this.game.touchStartY = touch.clientY;
+                        this.game.currentTouchY = touch.clientY;
+                        this.game.touchStartX = touch.clientX;
+                        this.game.currentTouchX = touch.clientX;
+                        this.game.isTouching = true;
+                    }
+                });
+
+                canvas.addEventListener('touchmove', e => {
+                    e.preventDefault();
+                    if (!this.game.isTouching) return;
+                    
+                    const touch = Array.from(e.touches).find(t => t.identifier === this.touchId);
+                    if (!touch) return;
+                    
+                    // ПРОСТАЯ СИСТЕМА: вертикальное движение = Y, горизонтальное = X
+                    const deltaY = (touch.clientY - this.game.touchStartY) * this.touchSensitivity * 0.01;
+                    const deltaX = (touch.clientX - this.game.touchStartX) * this.touchSensitivity * 0.01;
+                    
+                    // Устанавливаем скорость напрямую
+                    this.game.touchDeltaY = Math.max(-1, Math.min(1, deltaY)) * 3;
+                    this.game.touchDeltaX = Math.max(-1, Math.min(1, deltaX)) * 6;
+                    
+                    this.game.currentTouchY = touch.clientY;
+                    this.game.currentTouchX = touch.clientX;
+                });
+
+                canvas.addEventListener('touchend', e => {
+                    e.preventDefault();
+                    const touch = Array.from(e.changedTouches).find(t => t.identifier === this.touchId);
+                    if (touch) {
+                        this.game.isTouching = false;
+                        this.touchId = null;
+                        // Плавный сброс скорости при отпускании
+                        this.game.touchDeltaY = 0;
+                        this.game.touchDeltaX = 0;
+                    }
+                });
+            }
+
+            update() {
+                // Плавное замедление при отсутствии касания
+                if (!this.game.isTouching) {
+                    this.game.touchDeltaY *= 0.9;
+                    this.game.touchDeltaX *= 0.9;
+                    
+                    if (Math.abs(this.game.touchDeltaY) < 0.1) this.game.touchDeltaY = 0;
+                    if (Math.abs(this.game.touchDeltaX) < 0.1) this.game.touchDeltaX = 0;
+                }
+            }
+        }
+
+        class Player {
+            constructor(game) {
+                this.game = game;
+                
+                // УМЕНЬШЕННЫЙ РАЗМЕР ИГРОКА НА 20%
+                this.originalWidth = 166;
+                this.originalHeight = 215;
+                this.width = this.originalWidth * 0.8; // Уменьшение на 20%
+                this.height = this.originalHeight * 0.8; // Уменьшение на 20%
+                
+                // СТАРТОВАЯ ПОЗИЦИЯ: 30px от нижнего края
+                this.x = 20;
+                this.y = this.game.height - this.height - 30; // 30px от низа
+                
+                // УВЕЛИЧЕННЫЕ ГРАНИЦЫ ДВИЖЕНИЯ
+                const margin = 100;
+                this.xLimitRight = this.game.width - this.width + margin;
+                this.xLimitLeft = -margin;
+                this.yLimitUp = -margin;
+                this.yLimitDown = this.game.height - this.height + margin;
+                
+                this.frameX = 0;
+                this.frameY = 0;
+                this.maxFrame = 2;
+                this.frameTimer = 0;
+                this.frameInterval = 100;
+                
+                // УЛУЧШЕННЫЕ НАСТРОЙКИ ДВИЖЕНИЯ
+                this.speedX = 0;
+                this.speedY = 0;
+                this.maxSpeedY = 3;
+                this.maxSpeedX = 6;
+                
+                this.image = document.getElementById('player');
+                this.collisionCount = 0;
+                
+                // УМЕНЬШЕННАЯ ОБЛАСТЬ КОЛЛИЗИИ НА 15px
+                this.collisionWidth = this.width - 30; // Уменьшение на 15px с каждой стороны
+                this.collisionHeight = this.height - 30; // Уменьшение на 15px с каждой стороны
+                this.collisionOffsetX = 15; // Смещение для центрирования
+                this.collisionOffsetY = 15; // Смещение для центрирования
+            }
+            
+            update(deltaTime) {
+                // Keyboard controls
+                if (this.game.keys.includes('ArrowUp') || this.game.keys.includes('w')) {
+                    this.speedY = Math.max(-this.maxSpeedY, this.speedY - 0.2);
+                } else if (this.game.keys.includes('ArrowDown') || this.game.keys.includes('s')) {
+                    this.speedY = Math.min(this.maxSpeedY, this.speedY + 0.2);
+                } else {
+                    // Плавное замедление по Y
+                    this.speedY *= 0.9;
+                }
+                
+                if (this.game.keys.includes('ArrowLeft') || this.game.keys.includes('a')) {
+                    this.speedX = Math.max(-this.maxSpeedX, this.speedX - 0.2);
+                    this.game.sound_stop_bool = true;
+                    this.game.sound_gaz_bool = false;
+                } else if (this.game.keys.includes('ArrowRight') || this.game.keys.includes('d')) {
+                    this.speedX = Math.min(this.maxSpeedX, this.speedX + 0.2);
+                    this.game.sound_gaz_bool = true;
+                    this.game.sound_stop_bool = false;
+                } else {
+                    // Плавное замедление по X
+                    this.speedX *= 0.9;
+                }
+                
+                // Touch controls - ПРОСТАЯ И ПРЕДСКАЗУЕМАЯ СИСТЕМА
+                if (this.game.isTouching) {
+                    // Вертикальное движение = Y, горизонтальное = X
+                    this.speedY = this.game.touchDeltaY;
+                    this.speedX = this.game.touchDeltaX;
+                    
+                    // Управление звуком для касаний
+                    this.game.sound_gaz_bool = this.game.touchDeltaX > 0.5;
+                    this.game.sound_stop_bool = this.game.touchDeltaX < -0.5;
+                }
+                
+                // Дополнительное плавное замедление при отсутствии ввода
+                if (!this.game.isTouching && !this.game.keys.length) {
+                    this.speedX *= 0.9;
+                    this.speedY *= 0.9;
+                    if (Math.abs(this.speedX) < 0.05) this.speedX = 0;
+                    if (Math.abs(this.speedY) < 0.05) this.speedY = 0;
+                    this.game.sound_gaz_bool = false;
+                    this.game.sound_stop_bool = false;
+                }
+                
+                // Movement
+                this.y += this.speedY;
+                this.x += this.speedX;
+                
+                // Boundaries с увеличенной областью
+                if (this.x < this.xLimitLeft) {
+                    this.x = this.xLimitLeft;
+                    this.speedX = 0;
+                }
+                if (this.x > this.xLimitRight) {
+                    this.x = this.xLimitRight;
+                    this.speedX = 0;
+                }
+                if (this.y > this.yLimitDown) {
+                    this.y = this.yLimitDown;
+                    this.speedY = 0;
+                }
+                if (this.y < this.yLimitUp) {
+                    this.y = this.yLimitUp;
+                    this.speedY = 0;
+                }
+                
+                // Animation
+                if (this.frameTimer > this.frameInterval) {
+                    if (this.frameX < this.maxFrame) this.frameX++;
+                    else this.frameX = 0;
+                    this.frameTimer = 0;
+                } else {
+                    this.frameTimer += deltaTime;
+                }
+            }
+            
+            draw(context) {
+                context.drawImage(
+                    this.image,
+                    this.frameX * this.originalWidth, this.frameY * this.originalHeight,
+                    this.originalWidth, this.originalHeight,
+                    this.x, this.y,
+                    this.width, this.height
+                );
+
+                // Отладочная отрисовка области коллизии
+                if (this.game.debug) {
+                    context.strokeStyle = 'red';
+                    context.lineWidth = 2;
+                    
+                    // Отрисовка уменьшенной прямоугольной области коллизии
+                    context.beginPath();
+                    context.rect(
+                        this.x + this.collisionOffsetX, 
+                        this.y + this.collisionOffsetY, 
+                        this.collisionWidth, 
+                        this.collisionHeight
+                    );
+                    
+                    // Вырезание правого верхнего треугольника
+                    context.moveTo(this.x + this.width - 10, this.y + this.collisionOffsetY);
+                    context.lineTo(this.x + this.width - this.collisionOffsetX, this.y + this.collisionOffsetY);
+                    context.lineTo(this.x + this.width - this.collisionOffsetX, this.y + this.collisionOffsetY + 10);
+                    context.closePath();
+                    
+                    context.stroke();
+                }
+
+                if (this.game.sound_gaz_bool) this.game.music.sound_gaz.play();
+                if (this.game.sound_stop_bool) this.game.music.sound_stop.play();
+            }
+            
+            // Метод для проверки коллизии с учетом вырезанного треугольника
+            checkCollision(object) {
+                const playerLeft = this.x + this.collisionOffsetX;
+                const playerRight = playerLeft + this.collisionWidth;
+                const playerTop = this.y + this.collisionOffsetY;
+                const playerBottom = playerTop + this.collisionHeight;
+                
+                const objectLeft = object.x;
+                const objectRight = object.x + object.width;
+                const objectTop = object.y;
+                const objectBottom = object.y + object.height;
+                
+                // Базовая проверка прямоугольников
+                if (objectRight < playerLeft || objectLeft > playerRight || 
+                    objectBottom < playerTop || objectTop > playerBottom) {
+                    return false;
+                }
+                
+                // Проверка на попадание в вырезанный треугольник
+                const triangleStartX = playerRight - 10; // Начало треугольника
+                const triangleEndX = playerRight; // Конец треугольника
+                const triangleEndY = playerTop + 10; // Высота треугольника
+                
+                // Если объект находится в области треугольника
+                if (objectLeft > triangleStartX && objectTop < triangleEndY) {
+                    // Проверяем, находится ли объект выше диагонали треугольника
+                    const triangleSlope = 1; // Наклон 45 градусов (10px по X = 10px по Y)
+                    const relativeX = objectRight - triangleStartX;
+                    const maxAllowedY = playerTop + relativeX * triangleSlope;
+                    
+                    if (objectTop < maxAllowedY) {
+                        return false; // Коллизии нет - объект в вырезанной области
+                    }
+                }
+                
+                return true; // Коллизия есть
+            }
+        }
+
+        class Game {
+            constructor(width, height) {
+                this.width = width;
+                this.height = height;
+                this.background = new Background(this);
+                this.player = new Player(this);
+                this.music = new Music(this);
+                this.input = new InputHandler(this);
+                this.cowSpawner = new CowSpawner(this);
+                
+                this.keys = [];
+                this.speed = 1;
+                this.score = 0;
+                this.sound_gaz_bool = false;
+                this.sound_stop_bool = true;
+                this.maxCollisions = 19;
+                this.debug = false; // Включить для отладки коллизий
+                
+                // Touch properties
+                this.touchStartY = 0;
+                this.touchStartX = 0;
+                this.currentTouchY = 0;
+                this.currentTouchX = 0;
+                this.touchDeltaY = 0;
+                this.touchDeltaX = 0;
+                this.isTouching = false;
+                
+                // Start music
+                this.music.media.loop = true;
+                this.music.media.play();
+            }
+            
+            checkCollision(object1, object2) {
+                // Используем улучшенную проверку коллизии для игрока
+                if (object2 === this.player) {
+                    return this.player.checkCollision(object1);
+                }
+                
+                // Стандартная проверка для других объектов
+                return (
+                    object1.x < object2.x + object2.width &&
+                    object1.x + object1.width > object2.x &&
+                    object1.y < object2.y + object2.height &&
+                    object1.y + object1.height > object2.y
+                );
+            }
+            
+            hitCow() {
+                this.speed *= 0.7;
+                this.player.collisionCount++;
+                
+                // Game over after 19 collisions
+                if (this.player.collisionCount >= this.maxCollisions) {
+                    alert(`Game Over! Вы сбили ${this.player.collisionCount} коров! Ваш счет: ${Math.floor(this.score)}`);
+                    document.location.reload();
+                }
+            }
+            
+            update(deltaTime) {
+                this.input.update();
+                this.background.layer4.update();
+                this.player.update(deltaTime);
+                this.background.update();
+                this.cowSpawner.update(deltaTime);
+                
+                // Score increases with time
+                this.score += this.speed * 0.1;
+                
+                // Gradually restore speed after collision
+                if (this.speed < 1) {
+                    this.speed += 0.01;
+                }
+            }
+            
+            draw(context) {
+                // Clear canvas
+                context.clearRect(0, 0, this.width, this.height);
+                
+                // Draw game elements
+                this.background.draw(context);
+                this.cowSpawner.draw(context);
+                this.player.draw(context);
+                this.background.layer4.draw(context);
+                
+                // Draw UI
+                context.fillStyle = 'white';
+                context.font = '20px Arial';
+                context.fillText(`Score: ${Math.floor(this.score)}`, 20, 30);
+                context.fillText(`Cows Hit: ${this.player.collisionCount}/${this.maxCollisions}`, 20, 60);
+                
+                // ИНДИКАТОР ЗДОРОВЬЯ
+                const healthWidth = 200;
+                const healthHeight = 20;
+                const healthX = this.width - healthWidth - 20;
+                const healthY = 30;
+                
+                // Фон индикатора
+                context.fillStyle = 'rgba(0,0,0,0.5)';
+                context.fillRect(healthX, healthY, healthWidth, healthHeight);
+                
+                // Здоровье (зеленый -> желтый -> красный)
+                const healthPercent = 1 - (this.player.collisionCount / this.maxCollisions);
+                if (healthPercent > 0.6) {
+                    context.fillStyle = '#4CAF50';
+                } else if (healthPercent > 0.3) {
+                    context.fillStyle = '#FFC107';
+                } else {
+                    context.fillStyle = '#F44336';
+                }
+                
+                context.fillRect(healthX, healthY, healthWidth * healthPercent, healthHeight);
+                
+                // Рамка
+                context.strokeStyle = 'white';
+                context.strokeRect(healthX, healthY, healthWidth, healthHeight);
+            }
+        }
+        
+        const game = new Game(canvas.width, canvas.height);
+        
+        let lastTime = 0;
+        function animate(timestamp) {
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+            
+            game.update(deltaTime);
+            game.draw(ctx);
+            requestAnimationFrame(animate);
+        }
+        
+        animate(0);
+    });
+  </script>
+</body>
+</html>
