@@ -263,7 +263,7 @@
         }
 
         class Cow {
-            constructor(game) {
+            constructor(game, xOffset = 0, yOffset = 0) {
                 this.game = game;
                 this.image = document.getElementById('cow');
                 
@@ -279,26 +279,26 @@
                 this.width = 80;
                 this.height = 80;
                 
-                // РАЗНАЯ СКОРОСТЬ КОРОВ
-                this.speed = Math.random() * 2 + 0.5; // 0.5 - 2.5
+                // УМЕНЬШЕННАЯ СКОРОСТЬ КОРОВ В 1.5 РАЗА
+                this.speed = Math.random() * 1.5 + 0.3; // 0.3 - 1.8
                 
                 // РАЗНЫЕ КООРДИНАТЫ НАЧАЛА ДВИЖЕНИЯ КОРОВ
-                this.x = this.game.width + Math.random() * 200; // Разный старт по X
+                this.x = this.game.width + Math.random() * 200 + xOffset; // Разный старт по X
                 
                 // Разные позиции по Y
                 const minY = 50;
                 const maxY = this.game.height - this.height - 50;
-                this.y = Math.random() * (maxY - minY) + minY;
+                this.y = Math.random() * (maxY - minY) + minY + yOffset;
                 
                 this.markedForDeletion = false;
                 
-                // Анимация коровы из 4 кадров
+                // Анимация коровы из 4 кадров - ЗАМЕДЛЕНА В 2 РАЗА
                 this.frameX = 0;
                 this.frameY = 0;
                 this.currentFrame = 0;
                 this.totalFrames = 4;
                 this.frameTimer = 0;
-                this.frameInterval = 150 + Math.random() * 100; // Разная скорость анимации
+                this.frameInterval = 300 + Math.random() * 200; // Увеличено для замедления анимации
                 
                 // ДЛЯ КОЛЛИЗИЙ - УМЕНЬШЕННАЯ ОБЛАСТЬ НА 15px
                 this.collisionWidth = this.width - 15;
@@ -320,7 +320,7 @@
                     this.markedForDeletion = true;
                 }
                 
-                // Анимация коровы - перебор всех 4 кадров
+                // Анимация коровы - перебор всех 4 кадров (замедлена в 2 раза)
                 if (this.frameTimer > this.frameInterval) {
                     this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
                     
@@ -347,12 +347,6 @@
                     this.width,                      // destination width
                     this.height                      // destination height
                 );
-                
-                // Отладочная отрисовка области коллизий (раскомментируйте для тестирования)
-                /*
-                context.strokeStyle = 'red';
-                context.strokeRect(this.collisionX, this.collisionY, this.collisionWidth, this.collisionHeight);
-                */
             }
         }
         
@@ -362,11 +356,27 @@
                 this.cows = [];
                 this.spawnTimer = 0;
                 this.spawnInterval = 1500;
+                this.groupSpawnChance = 0.3; // 30% шанс группового появления
             }
             
             update(deltaTime) {
                 if (this.spawnTimer > this.spawnInterval) {
-                    this.cows.push(new Cow(this.game));
+                    // Случайное групповое появление коров
+                    if (Math.random() < this.groupSpawnChance) {
+                        const groupSize = Math.floor(Math.random() * 2) + 2; // 2-3 коровы в группе
+                        const baseX = this.game.width + Math.random() * 200;
+                        
+                        for (let i = 0; i < groupSize; i++) {
+                            // Корова появляются близко друг к другу (5-10px)
+                            const xOffset = i * (5 + Math.random() * 5);
+                            const yOffset = (Math.random() - 0.5) * 20; // Небольшое смещение по Y
+                            this.cows.push(new Cow(this.game, xOffset, yOffset));
+                        }
+                    } else {
+                        // Одиночная корова
+                        this.cows.push(new Cow(this.game));
+                    }
+                    
                     this.spawnTimer = 0;
                     this.spawnInterval = 1000 + Math.random() * 2000;
                 } else {
@@ -508,10 +518,10 @@
                 this.image = document.getElementById('player');
                 this.collisionCount = 0;
                 
-                // ДЛЯ КОЛЛИЗИЙ - УМЕНЬШЕННАЯ ОБЛАСТЬ НА 15px
-                this.collisionWidth = this.width - 15;
+                // ДЛЯ КОЛЛИЗИЙ - ПРЯМОУГОЛЬНАЯ ОБЛАСТЬ БЕЗ ПРАВОГО ТРЕУГОЛЬНИКА
+                this.collisionWidth = this.width - 30; // Уменьшена ширина области коллизий
                 this.collisionHeight = this.height - 15;
-                this.collisionX = this.x + 7.5; // Центрируем уменьшенную область
+                this.collisionX = this.x + 15; // Смещена влево для исключения правого треугольника
                 this.collisionY = this.y + 7.5;
             }
             
@@ -565,19 +575,19 @@
                 this.x += this.speedX;
                 
                 // Обновляем позицию для коллизий
-                this.collisionX = this.x + 7.5;
+                this.collisionX = this.x + 15;
                 this.collisionY = this.y + 7.5;
                 
                 // Boundaries с увеличенной областью
                 if (this.x < this.xLimitLeft) {
                     this.x = this.xLimitLeft;
                     this.speedX = 0;
-                    this.collisionX = this.x + 7.5;
+                    this.collisionX = this.x + 15;
                 }
                 if (this.x > this.xLimitRight) {
                     this.x = this.xLimitRight;
                     this.speedX = 0;
-                    this.collisionX = this.x + 7.5;
+                    this.collisionX = this.x + 15;
                 }
                 if (this.y > this.yLimitDown) {
                     this.y = this.yLimitDown;
