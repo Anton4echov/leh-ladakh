@@ -132,6 +132,31 @@
       font-size: 0.9em;
       color: #ccc;
     }
+
+    .touch-controls {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+      padding: 10px;
+    }
+
+    .touch-btn {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.3);
+      border: 2px solid white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      touch-action: manipulation;
+    }
+
+    .touch-btn:active {
+      background: rgba(255, 255, 255, 0.6);
+    }
   </style>
 </head>
 <body>
@@ -150,18 +175,25 @@
   <main>
     <section>
       <h2>Гонки по Ладакху</h2>
-      <p>Прокатитесь на мотоцикле по живописным дорогам Ладакха! Управляйте стрелками или наклонами телефона.</p>
+      <p>Прокатитесь на мотоцикле по живописным дорогам Ладакха!</p>
       
       <div class="game-container">
         <canvas id="canvas1"></canvas>
       </div>
+
+      <div class="touch-controls">
+        <div class="touch-btn" id="btnLeft">←</div>
+        <div class="touch-btn" id="btnUp">↑</div>
+        <div class="touch-btn" id="btnDown">↓</div>
+        <div class="touch-btn" id="btnRight">→</div>
+      </div>
       
       <div class="control-hint">
-        📱 Управление: Наклоните телефон влево/вправо для поворотов
+        📱 Управление: Кнопки ниже или свайпы по экрану
       </div>
       
       <div class="game-info">
-        <p>Управление: стрелки клавиатуры (↑↓←→) или наклоны телефона</p>
+        <p>Управление: стрелки клавиатуры или кнопки на экране</p>
         <p>Избегайте коров на дороге! После 19 столкновений игра закончится.</p>
       </div>
     </section>
@@ -364,10 +396,8 @@
             constructor(game) {
                 this.game = game;
                 
-                // НАСТРОЙКИ ДЛЯ КОМФОРТНОГО УПРАВЛЕНИЯ
-                this.maxTiltSpeed = 4;
-                this.tiltSensitivity = 0.03;
-                this.returnToCenterSpeed = 0.1;
+                // КНОПКИ УПРАВЛЕНИЯ
+                this.setupTouchButtons();
                 
                 // Keyboard controls
                 window.addEventListener('keydown', e => {
@@ -384,28 +414,19 @@
                     }
                 });
 
-                // Gyroscope controls для мобильных устройств
-                if (window.DeviceOrientationEvent) {
-                    window.addEventListener('deviceorientation', (e) => {
-                        // Используем gamma (наклон влево-вправо) для управления
-                        if (e.gamma !== null) {
-                            this.game.tiltX = Math.max(-45, Math.min(45, e.gamma * this.tiltSensitivity));
-                        }
-                    });
-                }
-
-                // Touch controls как запасной вариант
+                // Touch controls для всего экрана
                 let touchStartX = 0;
                 let touchStartY = 0;
+                let isSwiping = false;
                 
                 canvas.addEventListener('touchstart', (e) => {
                     touchStartX = e.touches[0].clientX;
                     touchStartY = e.touches[0].clientY;
-                    this.game.isTouching = true;
+                    isSwiping = true;
                 });
 
                 canvas.addEventListener('touchmove', (e) => {
-                    if (!this.game.isTouching) return;
+                    if (!isSwiping) return;
                     
                     const touchX = e.touches[0].clientX;
                     const touchY = e.touches[0].clientY;
@@ -413,28 +434,115 @@
                     const deltaX = touchX - touchStartX;
                     const deltaY = touchY - touchStartY;
                     
-                    // Плавное управление касанием
-                    this.game.touchControlX = Math.max(-1, Math.min(1, deltaX / 50));
-                    this.game.touchControlY = Math.max(-1, Math.min(1, deltaY / 50));
-                    
-                    touchStartX = touchX;
-                    touchStartY = touchY;
+                    // Определяем направление свайпа
+                    if (Math.abs(deltaX) > 20 || Math.abs(deltaY) > 20) {
+                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                            // Горизонтальный свайп
+                            if (deltaX > 0) {
+                                this.game.swipeDirection = 'right';
+                            } else {
+                                this.game.swipeDirection = 'left';
+                            }
+                        } else {
+                            // Вертикальный свайп
+                            if (deltaY > 0) {
+                                this.game.swipeDirection = 'down';
+                            } else {
+                                this.game.swipeDirection = 'up';
+                            }
+                        }
+                    }
                 });
 
                 canvas.addEventListener('touchend', () => {
-                    this.game.isTouching = false;
-                    this.game.touchControlX = 0;
-                    this.game.touchControlY = 0;
+                    isSwiping = false;
+                    this.game.swipeDirection = null;
+                });
+            }
+
+            setupTouchButtons() {
+                const btnLeft = document.getElementById('btnLeft');
+                const btnRight = document.getElementById('btnRight');
+                const btnUp = document.getElementById('btnUp');
+                const btnDown = document.getElementById('btnDown');
+
+                // Left button
+                btnLeft.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (!this.game.touchButtons.includes('left')) {
+                        this.game.touchButtons.push('left');
+                    }
+                });
+                btnLeft.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    const index = this.game.touchButtons.indexOf('left');
+                    if (index > -1) {
+                        this.game.touchButtons.splice(index, 1);
+                    }
+                });
+
+                // Right button
+                btnRight.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (!this.game.touchButtons.includes('right')) {
+                        this.game.touchButtons.push('right');
+                    }
+                });
+                btnRight.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    const index = this.game.touchButtons.indexOf('right');
+                    if (index > -1) {
+                        this.game.touchButtons.splice(index, 1);
+                    }
+                });
+
+                // Up button
+                btnUp.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (!this.game.touchButtons.includes('up')) {
+                        this.game.touchButtons.push('up');
+                    }
+                });
+                btnUp.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    const index = this.game.touchButtons.indexOf('up');
+                    if (index > -1) {
+                        this.game.touchButtons.splice(index, 1);
+                    }
+                });
+
+                // Down button
+                btnDown.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (!this.game.touchButtons.includes('down')) {
+                        this.game.touchButtons.push('down');
+                    }
+                });
+                btnDown.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    const index = this.game.touchButtons.indexOf('down');
+                    if (index > -1) {
+                        this.game.touchButtons.splice(index, 1);
+                    }
                 });
             }
 
             update() {
-                // Плавное возвращение к центру при отсутствии управления
-                if (this.game.tiltX && !this.game.isTouching && !this.game.keys.length) {
-                    if (this.game.tiltX > 0) {
-                        this.game.tiltX = Math.max(0, this.game.tiltX - this.returnToCenterSpeed);
-                    } else {
-                        this.game.tiltX = Math.min(0, this.game.tiltX + this.returnToCenterSpeed);
+                // Обработка свайпов
+                if (this.game.swipeDirection) {
+                    switch(this.game.swipeDirection) {
+                        case 'left':
+                            this.game.player.targetSpeedX = -this.game.player.maxSpeedX;
+                            break;
+                        case 'right':
+                            this.game.player.targetSpeedX = this.game.player.maxSpeedX;
+                            break;
+                        case 'up':
+                            this.game.player.targetSpeedY = -this.game.player.maxSpeedY;
+                            break;
+                        case 'down':
+                            this.game.player.targetSpeedY = this.game.player.maxSpeedY;
+                            break;
                     }
                 }
             }
@@ -450,7 +558,7 @@
                 this.width = this.originalWidth * 0.7;
                 this.height = this.originalHeight * 0.7;
                 
-                // НАЧАЛЬНАЯ ПОЗИЦИЯ - ЦЕНТР ЭКРАНА
+                // НАЧАЛЬНАЯ ПОЗИЦИЯ
                 this.x = 50;
                 this.y = this.game.height / 2 - this.height / 2;
                 
@@ -461,13 +569,16 @@
                 this.yLimitUp = margin;
                 this.yLimitDown = this.game.height - this.height - margin;
                 
-                // НАСТРОЙКИ ДВИЖЕНИЯ ДЛЯ КОМФОРТНОГО УПРАВЛЕНИЯ
+                // НАСТРОЙКИ ДВИЖЕНИЯ - КОМФОРТНЫЕ
                 this.speedX = 0;
                 this.speedY = 0;
-                this.maxSpeedX = 6;
-                this.maxSpeedY = 3;
-                this.acceleration = 0.15;
-                this.deceleration = 0.08;
+                this.maxSpeedX = 4; // Уменьшено для комфорта
+                this.maxSpeedY = 2; // Уменьшено для комфорта
+                this.acceleration = 0.1; // Медленное ускорение
+                this.deceleration = 0.05; // Медленное замедление
+                
+                this.targetSpeedX = 0;
+                this.targetSpeedY = 0;
                 
                 this.image = document.getElementById('player');
                 this.collisionCount = 0;
@@ -481,50 +592,45 @@
             }
             
             update(deltaTime) {
-                let targetSpeedX = 0;
-                let targetSpeedY = 0;
+                // СБРОС ЦЕЛЕВЫХ СКОРОСТЕЙ
+                this.targetSpeedX = 0;
+                this.targetSpeedY = 0;
                 
                 // КЛАВИАТУРА - приоритет
                 if (this.game.keys.includes('ArrowLeft') || this.game.keys.includes('a')) {
-                    targetSpeedX = -this.maxSpeedX;
-                    this.game.sound_gaz_bool = false;
-                    this.game.sound_stop_bool = true;
+                    this.targetSpeedX = -this.maxSpeedX;
                 } else if (this.game.keys.includes('ArrowRight') || this.game.keys.includes('d')) {
-                    targetSpeedX = this.maxSpeedX;
-                    this.game.sound_gaz_bool = true;
-                    this.game.sound_stop_bool = false;
+                    this.targetSpeedX = this.maxSpeedX;
                 }
                 
                 if (this.game.keys.includes('ArrowUp') || this.game.keys.includes('w')) {
-                    targetSpeedY = -this.maxSpeedY;
+                    this.targetSpeedY = -this.maxSpeedY;
                 } else if (this.game.keys.includes('ArrowDown') || this.game.keys.includes('s')) {
-                    targetSpeedY = this.maxSpeedY;
+                    this.targetSpeedY = this.maxSpeedY;
                 }
                 
-                // ГИРОСКОП - основной способ управления на мобильном
-                if (!this.game.keys.length && this.game.tiltX !== undefined) {
-                    targetSpeedX = this.game.tiltX * this.maxSpeedX;
-                    this.game.sound_gaz_bool = this.game.tiltX > 0;
-                    this.game.sound_stop_bool = this.game.tiltX < 0;
+                // TOUCH КНОПКИ
+                if (this.game.touchButtons.includes('left')) {
+                    this.targetSpeedX = -this.maxSpeedX;
+                } else if (this.game.touchButtons.includes('right')) {
+                    this.targetSpeedX = this.maxSpeedX;
                 }
                 
-                // TOUCH CONTROL - запасной вариант
-                if (!this.game.keys.length && this.game.tiltX === undefined && this.game.isTouching) {
-                    targetSpeedX = this.game.touchControlX * this.maxSpeedX;
-                    targetSpeedY = this.game.touchControlY * this.maxSpeedY;
-                    this.game.sound_gaz_bool = this.game.touchControlX > 0;
-                    this.game.sound_stop_bool = this.game.touchControlX < 0;
+                if (this.game.touchButtons.includes('up')) {
+                    this.targetSpeedY = -this.maxSpeedY;
+                } else if (this.game.touchButtons.includes('down')) {
+                    this.targetSpeedY = this.maxSpeedY;
                 }
                 
                 // ПЛАВНОЕ ИЗМЕНЕНИЕ СКОРОСТИ
-                if (targetSpeedX !== 0) {
-                    this.speedX += (targetSpeedX - this.speedX) * this.acceleration;
+                if (this.targetSpeedX !== 0) {
+                    this.speedX += (this.targetSpeedX - this.speedX) * this.acceleration;
                 } else {
                     this.speedX *= (1 - this.deceleration);
                 }
                 
-                if (targetSpeedY !== 0) {
-                    this.speedY += (targetSpeedY - this.speedY) * this.acceleration;
+                if (this.targetSpeedY !== 0) {
+                    this.speedY += (this.targetSpeedY - this.speedY) * this.acceleration;
                 } else {
                     this.speedY *= (1 - this.deceleration);
                 }
@@ -545,6 +651,10 @@
                 if (Math.abs(this.speedX) < 0.1) this.speedX = 0;
                 if (Math.abs(this.speedY) < 0.1) this.speedY = 0;
                 
+                // ЗВУКИ
+                this.game.sound_gaz_bool = this.speedX > 0.5;
+                this.game.sound_stop_bool = this.speedX < -0.5;
+                
                 // АНИМАЦИЯ
                 if (this.frameTimer > this.frameInterval) {
                     this.frameX = (this.frameX + 1) % (this.maxFrame + 1);
@@ -555,38 +665,17 @@
             }
             
             draw(context) {
-                // Рисуем мотоцикл с небольшим наклоном в сторону движения для реализма
-                const rotation = this.speedX * 0.05;
-                
-                context.save();
-                context.translate(this.x + this.width / 2, this.y + this.height / 2);
-                context.rotate(rotation);
-                
                 context.drawImage(
                     this.image,
                     this.frameX * this.originalWidth,
                     this.frameY * this.originalHeight,
                     this.originalWidth,
                     this.originalHeight,
-                    -this.width / 2,
-                    -this.height / 2,
+                    this.x,
+                    this.y,
                     this.width,
                     this.height
                 );
-                
-                context.restore();
-
-                // ЗВУКИ
-                if (this.game.sound_gaz_bool) {
-                    this.game.music.sound_gaz.play();
-                    this.game.music.sound_stop.pause();
-                } else if (this.game.sound_stop_bool) {
-                    this.game.music.sound_stop.play();
-                    this.game.music.sound_gaz.pause();
-                } else {
-                    this.game.music.sound_gaz.pause();
-                    this.game.music.sound_stop.pause();
-                }
             }
         }
 
@@ -601,19 +690,13 @@
                 this.cowSpawner = new CowSpawner(this);
                 
                 this.keys = [];
+                this.touchButtons = [];
+                this.swipeDirection = null;
                 this.speed = 1;
                 this.score = 0;
                 this.sound_gaz_bool = false;
                 this.sound_stop_bool = true;
                 this.maxCollisions = 19;
-                
-                // Управление гироскопом
-                this.tiltX = 0;
-                
-                // Touch управление
-                this.isTouching = false;
-                this.touchControlX = 0;
-                this.touchControlY = 0;
                 
                 // Start music
                 this.music.media.loop = true;
@@ -653,6 +736,18 @@
                 if (this.speed < 1) {
                     this.speed += 0.005;
                 }
+                
+                // ЗВУКИ
+                if (this.sound_gaz_bool) {
+                    this.music.sound_gaz.play();
+                    this.music.sound_stop.pause();
+                } else if (this.sound_stop_bool) {
+                    this.music.sound_stop.play();
+                    this.music.sound_gaz.pause();
+                } else {
+                    this.music.sound_gaz.pause();
+                    this.music.sound_stop.pause();
+                }
             }
             
             draw(context) {
@@ -668,14 +763,6 @@
                 context.font = '20px Arial';
                 context.fillText(`Score: ${Math.floor(this.score)}`, 20, 30);
                 context.fillText(`Cows: ${this.player.collisionCount}/${this.maxCollisions}`, 20, 60);
-                
-                // Индикатор управления для мобильных
-                if (this.tiltX !== undefined) {
-                    context.fillStyle = 'rgba(255,255,255,0.3)';
-                    context.fillRect(this.width / 2 - 60, this.height - 40, 120, 20);
-                    context.fillStyle = '#4CAF50';
-                    context.fillRect(this.width / 2 - 60 + 60 + (this.tiltX * 50), this.height - 40, 10, 20);
-                }
                 
                 // Health bar
                 const healthWidth = 200;
