@@ -545,9 +545,8 @@
                 this.x = 20;
                 this.y = this.game.height - this.height - 30; // 30px от низа
                 
-                // Сохраняем позицию для восстановления после столкновения
+                // Сохраняем позицию X для восстановления после столкновения (только X)
                 this.preCollisionX = this.x;
-                this.preCollisionY = this.y;
                 
                 // УВЕЛИЧЕННЫЕ ГРАНИЦЫ ДВИЖЕНИЯ
                 const margin = 100;
@@ -621,9 +620,8 @@
                 // Если игрок не видим, не обновляем
                 if (!this.isVisible) return;
                 
-                // Сохраняем позицию перед движением
+                // Сохраняем позицию X перед движением (только X)
                 this.preCollisionX = this.x;
-                this.preCollisionY = this.y;
                 
                 // Сохраняем состояние движения для звуков
                 const wasMovingRight = this.speedX > 0.5;
@@ -711,10 +709,10 @@
                 }
             }
             
-            // Метод для восстановления позиции после столкновения
+            // Метод для восстановления позиции после столкновения (только X)
             restorePosition() {
                 this.x = this.preCollisionX;
-                this.y = this.preCollisionY;
+                // Y позиция НЕ восстанавливается - игрок остается на текущей высоте
             }
             
             draw(context) {
@@ -859,7 +857,7 @@
                 this.speed *= 0.7;
                 this.player.collisionCount++;
                 
-                // Восстанавливаем позицию игрока (возвращаем на место до столкновения)
+                // Восстанавливаем позицию игрока (только X)
                 this.player.restorePosition();
                 
                 // Уменьшаем размер игрока
