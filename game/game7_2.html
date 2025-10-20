@@ -289,11 +289,11 @@
                 
                 // Размер одного кадра (2 кадра в строке)
                 this.frameWidth = this.spriteWidth / 2;
-                this.frameHeight = this.spriteHeight / 5; // 5 строк
+                this.frameHeight = this.spriteHeight / 5 - 2 ; // 5 строк
                 
                 // Отображаемый размер собаки
-                this.width = 70;
-                this.height = 95;
+                this.width = 50;
+                this.height = 75;
                 
                 // ЗАМЕДЛЕННАЯ СКОРОСТЬ СОБАКИ В 3 РАЗА
                 this.speed = (Math.random() * 0.7 + 0.3); // 0.3 - 1.0 (было 1-3)
@@ -314,7 +314,7 @@
                 this.currentFrame = 0;
                 this.totalFrames = 10;
                 this.frameTimer = 0;
-                this.frameInterval = 120; // Интервал анимации
+                this.frameInterval = 30; // Интервал анимации
             }
             
             update(deltaTime) {
