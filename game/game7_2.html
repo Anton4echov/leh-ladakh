@@ -604,9 +604,10 @@
                     
                     // Сохраняем текущую позицию перед обновлением Y
                     const currentX = this.x;
+                    const currentY = this.y;
                     
                     // Обновляем позицию Y чтобы оставаться у нижнего края
-                    this.y = this.game.height - this.height - 30;
+                    this.y = currentY;
                     
                     // Восстанавливаем позицию X
                     this.x = currentX;
