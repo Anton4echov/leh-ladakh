@@ -545,9 +545,6 @@
                 this.x = 20;
                 this.y = this.game.height - this.height - 30; // 30px от низа
                 
-                // Сохраняем позицию X для восстановления после столкновения (только X)
-                this.preCollisionX = this.x;
-                
                 // УВЕЛИЧЕННЫЕ ГРАНИЦЫ ДВИЖЕНИЯ
                 const margin = 100;
                 this.xLimitRight = this.game.width - this.width + margin;
@@ -619,9 +616,6 @@
             update(deltaTime) {
                 // Если игрок не видим, не обновляем
                 if (!this.isVisible) return;
-                
-                // Сохраняем позицию X перед движением (только X)
-                this.preCollisionX = this.x;
                 
                 // Сохраняем состояние движения для звуков
                 const wasMovingRight = this.speedX > 0.5;
@@ -707,13 +701,6 @@
                 } else {
                     this.frameTimer += deltaTime;
                 }
-            }
-            
-            // Метод для восстановления позиции после столкновения (только X)
-            restorePosition() {
-                this.x = this.preCollisionX;
-                this.y = this.game.height - this.height - 30; // вернуть к дорожному уровню
-                // Y позиция НЕ восстанавливается - игрок остается на текущей высоте
             }
             
             draw(context) {
@@ -858,8 +845,7 @@
                 this.speed *= 0.7;
                 this.player.collisionCount++;
                 
-                // Восстанавливаем позицию игрока (только X)
-                this.player.restorePosition();
+                // ПОЗИЦИЯ ИГРОКА НЕ ВОССТАНАВЛИВАЕТСЯ - игрок остается на текущем месте
                 
                 // Уменьшаем размер игрока
                 this.player.shrink();
