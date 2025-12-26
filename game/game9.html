@@ -531,8 +531,9 @@
                 this.originalWidth = 166;
                 this.originalHeight = 215;
                 
-                this.initialWidth = this.originalWidth * 0.8;
-                this.initialHeight = this.originalHeight * 0.8;
+                // УМЕНЬШЕН РАЗМЕР НА 25%
+                this.initialWidth = this.originalWidth * 0.6; // было * 0.8, стало * 0.6 (на 25% меньше)
+                this.initialHeight = this.originalHeight * 0.6; // было * 0.8, стало * 0.6
                 
                 this.width = this.initialWidth;
                 this.height = this.initialHeight;
@@ -574,26 +575,12 @@
             }
             
             shrink() {
+                // УБРАЛ УМЕНЬШЕНИЕ РАЗМЕРА ПРИ СТОЛКНОВЕНИИ
+                // Теперь этот метод только проверяет окончание игры
                 if (this.collisionCount >= this.game.maxCollisions) {
                     this.isVisible = false;
-                } else {
-                    const shrinkFactor = 1 - (this.collisionCount / this.game.maxCollisions);
-                    this.width = this.initialWidth * shrinkFactor;
-                    this.height = this.initialHeight * shrinkFactor;
-                    
-                    this.collisionWidth = Math.max(10, this.width - 30);
-                    this.collisionHeight = Math.max(10, this.height - 30);
-                    this.collisionOffsetX = (this.width - this.collisionWidth) / 2;
-                    this.collisionOffsetY = (this.height - this.collisionHeight) / 2;
-                    
-                    this.triangleSize = this.height * 0.15;
-                    
-                    const currentX = this.x;
-                    const currentY = this.y;
-                    
-                    this.y = currentY;
-                    this.x = currentX;
                 }
+                // Размеры остаются без изменений при столкновении
             }
             
             update(deltaTime) {
@@ -862,33 +849,14 @@
                 context.fillText(`Cows Hit: ${this.player.collisionCount}/${this.maxCollisions}`, 20, 60);
                 context.fillText(`Missed: ${this.missedCows}/${this.maxMissedCows}`, 20, 90);
                 
-                // ИНДИКАТОР ЗДОРОВЬЯ (сбитые коровы)
-                const healthWidth = 200;
-                const healthHeight = 20;
-                const healthX = this.width - healthWidth - 20;
-                const healthY = 30;
-                
-                context.fillStyle = 'rgba(0,0,0,0.5)';
-                context.fillRect(healthX, healthY, healthWidth, healthHeight);
-                
-                const healthPercent = 1 - (this.player.collisionCount / this.maxCollisions);
-                if (healthPercent > 0.6) {
-                    context.fillStyle = '#4CAF50';
-                } else if (healthPercent > 0.3) {
-                    context.fillStyle = '#FFC107';
-                } else {
-                    context.fillStyle = '#F44336';
-                }
-                
-                context.fillRect(healthX, healthY, healthWidth * healthPercent, healthHeight);
-                context.strokeStyle = 'white';
-                context.strokeRect(healthX, healthY, healthWidth, healthHeight);
+                // УБРАЛ ИНДИКАТОР ЗДОРОВЬЯ
+                // Оставил только индикатор пропущенных коров:
                 
                 // ИНДИКАТОР ПРОПУЩЕННЫХ КОРОВ
                 const missedWidth = 200;
                 const missedHeight = 20;
                 const missedX = this.width - missedWidth - 20;
-                const missedY = 70;
+                const missedY = 30;
                 
                 context.fillStyle = 'rgba(0,0,0,0.5)';
                 context.fillRect(missedX, missedY, missedWidth, missedHeight);
@@ -899,11 +867,10 @@
                 context.strokeStyle = 'white';
                 context.strokeRect(missedX, missedY, missedWidth, missedHeight);
                 
-                // Подписи к индикаторам
+                // Подпись к индикатору пропущенных коров
                 context.fillStyle = 'white';
                 context.font = '14px Arial';
-                context.fillText('Здоровье', missedX + missedWidth - 80, 27);
-                context.fillText('Пропуски', missedX + missedWidth - 80, 67);
+                context.fillText('Пропущено', missedX + missedWidth - 80, 27);
             }
         }
         
