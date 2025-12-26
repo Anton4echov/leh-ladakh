@@ -143,7 +143,7 @@
   <main>
     <section>
       <h2></h2>
-      <p>Прокатитесь на мотоцикле по живописным дорогам Ладакха! Управляйте стрелками или свайпами на телефоне.</p>
+      <p>Игра - "КТО В ЛЕХ, КТО ПО ДРОВА?" - Прокатитесь на мотоцикле по живописным дорогам Ладакха!</p>
       
       <div class="game-container">
         <canvas id="canvas1"></canvas>
@@ -151,7 +151,8 @@
       
       <div class="game-info">
         <p>Управление: стрелки клавиатуры (↑↓←→) или свайпы на сенсорном экране</p>
-        <p>Избегайте коров на дороге! Если пропустите 9 коров - игра закончится.</p>
+        <p>Сбивайте коров на дороге! Если пропустите 9 коров - игра закончится.</p>
+        <p>Сложность увеличивается каждые 100 очков - коровы становятся быстрее!</p>
       </div>
     </section>
   </main>
@@ -293,8 +294,8 @@
                 this.width = 80;
                 this.height = 80;
                 
-                // УВЕЛИЧЕННАЯ СКОРОСТЬ КОРОВ (сложнее пропустить)
-                this.speed = Math.random() * 2 + 1; // 1 - 3 (было 0.35 - 1.75)
+                // БАЗОВАЯ скорость коров (будет умножаться на модификатор сложности)
+                this.baseSpeed = Math.random() * 2 + 1; // 1 - 3
                 
                 // РАЗНЫЕ КООРДИНАТЫ НАЧАЛА ДВИЖЕНИЯ КОРОВ
                 this.x = this.game.width + Math.random() * 200 + xOffset; // Разный старт по X
@@ -306,7 +307,7 @@
                 
                 this.markedForDeletion = false;
                 
-                // УСКОРЕННАЯ АНИМАЦИЯ КОРОВЫ В 2 РАЗА
+                // УСКОРЕННАЯ АНИМАЦИЯ КОРОВЫ
                 this.frameX = 0;
                 this.frameY = 0;
                 this.currentFrame = 0;
@@ -337,8 +338,11 @@
                     // Останавливаем анимацию ходьбы при столкновении
                     this.frameTimer = 0;
                 } else {
+                    // Вычисляем текущую скорость с учетом модификатора сложности
+                    const currentSpeed = this.baseSpeed * this.game.difficultyModifier;
+                    
                     // Обычное движение
-                    this.x -= this.speed + this.game.speed;
+                    this.x -= currentSpeed + this.game.speed;
                     
                     // Проверяем, ушла ли корова за экран
                     if (this.x + this.width < 0 && !this.wasMissed && !this.hasCollided) {
@@ -574,8 +578,6 @@
                 this.wasMovingLeft = false;
             }
             
-            // УБРАЛ МЕТОД shrink() ПОЛНОСТЬЮ - ИГРА НЕ ЗАКАНЧИВАЕТСЯ ОТ СТОЛКНОВЕНИЙ
-            
             update(deltaTime) {
                 if (!this.isVisible) return;
                 
@@ -754,6 +756,11 @@
                 this.missedCows = 0;
                 this.maxMissedCows = 9;
                 
+                // СИСТЕМА СЛОЖНОСТИ
+                this.difficultyModifier = 1.0; // Начальный модификатор скорости коров
+                this.difficultyLevel = 0; // Текущий уровень сложности
+                this.lastDifficultyUpdate = 0; // Последние очки, когда обновлялась сложность
+                
                 // Touch properties
                 this.touchStartY = 0;
                 this.touchStartX = 0;
@@ -768,6 +775,22 @@
                 this.music.media.play();
                 this.music.sound_moto_back.loop = true;
                 this.music.sound_moto_back.play();
+            }
+            
+            // Метод для обновления сложности
+            updateDifficulty() {
+                // Вычисляем новый уровень сложности на основе счета
+                const newDifficultyLevel = Math.floor(this.score / 100);
+                
+                // Если уровень сложности увеличился
+                if (newDifficultyLevel > this.difficultyLevel) {
+                    this.difficultyLevel = newDifficultyLevel;
+                    // Увеличиваем модификатор скорости на 20% за каждый уровень
+                    this.difficultyModifier = 1.0 + (this.difficultyLevel * 0.2);
+                    
+                    // Воспроизводим звуковой эффект или показываем сообщение
+                    console.log(`Уровень сложности повышен! Уровень: ${this.difficultyLevel}, Модификатор скорости: x${this.difficultyModifier.toFixed(2)}`);
+                }
             }
             
             checkCollision(object1, object2) {
@@ -800,7 +823,7 @@
                 
                 if (this.missedCows >= this.maxMissedCows) {
                     setTimeout(() => {
-                        alert(`Game Over! Вы пропустили ${this.missedCows} коров! Сбито коров: ${this.player.collisionCount}. Ваш счет: ${Math.floor(this.score)}`);
+                        alert(`Game Over! Вы пропустили ${this.missedCows} коров! Сбито коров: ${this.player.collisionCount}. Ваш счет: ${Math.floor(this.score)}. Уровень сложности: ${this.difficultyLevel}`);
                         document.location.reload();
                     }, 500);
                 }
@@ -814,6 +837,9 @@
                 this.cowSpawner.update(deltaTime);
                 
                 this.score += this.speed * 0.1;
+                
+                // Обновляем сложность игры
+                this.updateDifficulty();
                 
                 if (this.speed < 1) {
                     this.speed += 0.01;
@@ -834,6 +860,8 @@
                 context.fillText(`Score: ${Math.floor(this.score)}`, 20, 30);
                 context.fillText(`Cows Hit: ${this.player.collisionCount}`, 20, 60);
                 context.fillText(`Missed: ${this.missedCows}/${this.maxMissedCows}`, 20, 90);
+                context.fillText(`Speed: x${this.difficultyModifier.toFixed(2)}`, 20, 120);
+                context.fillText(`Level: ${this.difficultyLevel}`, 20, 150);
                 
                 // ИНДИКАТОР ПРОПУЩЕННЫХ КОРОВ
                 const missedWidth = 200;
@@ -854,6 +882,34 @@
                 context.fillStyle = 'white';
                 context.font = '14px Arial';
                 context.fillText('Пропущено', missedX + missedWidth - 80, 27);
+                
+                // ИНДИКАТОР СЛОЖНОСТИ
+                const difficultyWidth = 200;
+                const difficultyHeight = 20;
+                const difficultyX = this.width - difficultyWidth - 20;
+                const difficultyY = 70;
+                
+                context.fillStyle = 'rgba(0,0,0,0.5)';
+                context.fillRect(difficultyX, difficultyY, difficultyWidth, difficultyHeight);
+                
+                // Уровень сложности (максимум 5 уровней для отображения)
+                const maxDisplayLevel = 5;
+                const difficultyLevelPercent = Math.min(this.difficultyLevel / maxDisplayLevel, 1);
+                context.fillStyle = '#4CAF50';
+                context.fillRect(difficultyX, difficultyY, difficultyWidth * difficultyLevelPercent, difficultyHeight);
+                context.strokeStyle = 'white';
+                context.strokeRect(difficultyX, difficultyY, difficultyWidth, difficultyHeight);
+                
+                // Подпись к индикатору сложности
+                context.fillStyle = 'white';
+                context.font = '14px Arial';
+                context.fillText('Сложность', difficultyX + difficultyWidth - 75, difficultyY - 3);
+                
+                // Отображение информации о скорости коров
+                context.fillStyle = 'white';
+                context.font = '14px Arial';
+                context.fillText(`След. уровень через: ${100 - (Math.floor(this.score) % 100)} очков`, 
+                    this.width - 250, 110);
             }
         }
         
