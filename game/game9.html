@@ -151,7 +151,7 @@
       
       <div class="game-info">
         <p>Управление: стрелки клавиатуры (↑↓←→) или свайпы на сенсорном экране</p>
-        <p>Сбивайте коров на дороге! Если пропустите 9 коров - игра закончится.</p>
+        <p>Избегайте коров на дороге! Если пропустите 9 коров - игра закончится.</p>
       </div>
     </section>
   </main>
@@ -574,14 +574,7 @@
                 this.wasMovingLeft = false;
             }
             
-            shrink() {
-                // УБРАЛ УМЕНЬШЕНИЕ РАЗМЕРА ПРИ СТОЛКНОВЕНИИ
-                // Теперь этот метод только проверяет окончание игры
-                if (this.collisionCount >= this.game.maxCollisions) {
-                    this.isVisible = false;
-                }
-                // Размеры остаются без изменений при столкновении
-            }
+            // УБРАЛ МЕТОД shrink() ПОЛНОСТЬЮ - ИГРА НЕ ЗАКАНЧИВАЕТСЯ ОТ СТОЛКНОВЕНИЙ
             
             update(deltaTime) {
                 if (!this.isVisible) return;
@@ -755,7 +748,6 @@
                 this.score = 0;
                 this.sound_gaz_bool = false;
                 this.sound_stop_bool = true;
-                this.maxCollisions = 19;
                 this.debug = false;
                 
                 // Счетчик пропущенных коров
@@ -798,17 +790,11 @@
                 this.speed *= 0.7;
                 this.player.collisionCount++;
                 
-                this.player.shrink();
-                
-                if (this.player.collisionCount >= this.maxCollisions) {
-                    setTimeout(() => {
-                        alert(`Game Over! Вы сбили ${this.player.collisionCount} коров! Ваш счет: ${Math.floor(this.score)}`);
-                        document.location.reload();
-                    }, 500);
-                }
+                // УБРАЛ КОНЕЦ ИГРЫ ПРИ СТОЛКНОВЕНИИ
+                // Просто увеличиваем счетчик, но игра не заканчивается
             }
             
-            // Новый метод для обработки пропущенных коров
+            // Метод для обработки пропущенных коров - игра заканчивается ТОЛЬКО здесь
             missCow() {
                 this.missedCows++;
                 
@@ -846,11 +832,8 @@
                 context.fillStyle = 'white';
                 context.font = '20px Arial';
                 context.fillText(`Score: ${Math.floor(this.score)}`, 20, 30);
-                context.fillText(`Cows Hit: ${this.player.collisionCount}/${this.maxCollisions}`, 20, 60);
+                context.fillText(`Cows Hit: ${this.player.collisionCount}`, 20, 60);
                 context.fillText(`Missed: ${this.missedCows}/${this.maxMissedCows}`, 20, 90);
-                
-                // УБРАЛ ИНДИКАТОР ЗДОРОВЬЯ
-                // Оставил только индикатор пропущенных коров:
                 
                 // ИНДИКАТОР ПРОПУЩЕННЫХ КОРОВ
                 const missedWidth = 200;
