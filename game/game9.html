@@ -31,13 +31,13 @@
     
     header {
       background: rgba(0, 0, 0, 0.6);
-      padding: 10px;
+      padding: 20px;
       text-align: center;
     }
     
     h1 {
       margin: 0;
-      font-size: 0.8rem;
+      font-size: 1.2rem;
     }
     
     h2, p {
@@ -47,8 +47,8 @@
     main {
       background: rgba(0, 0, 0, 0.5);
       max-width: 900px;
-      margin: 15px auto;
-      padding: 10px;
+      margin: 30px auto;
+      padding: 20px;
       border-radius: 8px;
       flex: 1;
       display: flex;
@@ -59,7 +59,7 @@
       position: relative;
       width: 100%;
       height: 50vh;
-      margin: 10px auto;
+      margin: 20px auto;
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
@@ -86,22 +86,22 @@
       align-items: center;
       color: #00b2ff;
       text-decoration: none;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
       font-weight: bold;
-      font-size: 0.55em;
     }
     
     .admin-link-leh svg{
-      width: 10px;
-      height: 10px;
-      margin-right: 4px;
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
       fill: #00b2ff;
     }
     
     a {
       align-items: center;
       font-weight: bold;
-      padding: 5px 8px;
+      font-size: 1.1em;
+      padding: 10px 16px;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
       transition: background 0.3s ease;
@@ -109,9 +109,9 @@
     
     footer {
       text-align: center;
-      padding: 5px;
+      padding: 10px;
       color: black;
-      font-size: 0.45rem;
+      font-size: 0.9rem;
       background: rgba(255, 255, 255, 0.7);
     }
     
@@ -122,13 +122,8 @@
     }
 
     .game-info {
-      margin-top: 10px;
+      margin-top: 20px;
       text-align: center;
-    }
-    
-    .game-info p {
-      font-size: 0.5rem;
-      margin: 2px 0;
     }
   </style>
 </head>
@@ -148,7 +143,7 @@
   <main>
     <section>
       <h2></h2>
-      <p style="font-size: 0.6rem;">Игра - "КТО В ЛЕХ, КТО ПО ДРОВА?" - Прокатитесь на мотоцикле по живописным дорогам Ладакха!</p>
+      <p>Игра - "КТО В ЛЕХ, КТО ПО ДРОВА?" - Прокатитесь на мотоцикле по живописным дорогам Ладакха!</p>
       
       <div class="game-container">
         <canvas id="canvas1"></canvas>
@@ -853,14 +848,14 @@
                 this.player.draw(context);
                 this.background.layer4.draw(context);
                 
-                // Draw UI (текст уменьшен в 2 раза)
+                // Draw UI - УМЕНЬШЕН В 2 РАЗА
                 context.fillStyle = 'white';
-                context.font = '10px Arial';
-                context.fillText(`Score: ${Math.floor(this.score)}`, 10, 15);
-                context.fillText(`Cows Hit: ${this.player.collisionCount}`, 10, 30);
-                context.fillText(`Missed: ${this.missedCows}/${this.maxMissedCows}`, 10, 45);
-                context.fillText(`Speed: x${this.difficultyModifier.toFixed(2)}`, 10, 60);
-                context.fillText(`Level: ${this.difficultyLevel}`, 10, 75);
+                context.font = '10px Arial'; // Было 20px
+                context.fillText(`Счет: ${Math.floor(this.score)}`, 10, 15); // Было 20,30
+                context.fillText(`Сбито: ${this.player.collisionCount}`, 10, 30); // Было 20,60
+                context.fillText(`Пропущено: ${this.missedCows}/${this.maxMissedCows}`, 10, 45); // Было 20,90
+                
+                // УБРАНЫ ИНДИКАТОРЫ ПРОПУЩЕННЫХ КОРОВ И СЛОЖНОСТИ
             }
         }
         
