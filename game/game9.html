@@ -31,13 +31,13 @@
     
     header {
       background: rgba(0, 0, 0, 0.6);
-      padding: 20px;
+      padding: 10px;
       text-align: center;
     }
     
     h1 {
       margin: 0;
-      font-size: 1.2rem;
+      font-size: 0.8rem;
     }
     
     h2, p {
@@ -47,8 +47,8 @@
     main {
       background: rgba(0, 0, 0, 0.5);
       max-width: 900px;
-      margin: 30px auto;
-      padding: 20px;
+      margin: 15px auto;
+      padding: 10px;
       border-radius: 8px;
       flex: 1;
       display: flex;
@@ -59,7 +59,7 @@
       position: relative;
       width: 100%;
       height: 50vh;
-      margin: 20px auto;
+      margin: 10px auto;
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
@@ -86,22 +86,22 @@
       align-items: center;
       color: #00b2ff;
       text-decoration: none;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
       font-weight: bold;
+      font-size: 0.55em;
     }
     
     .admin-link-leh svg{
-      width: 20px;
-      height: 20px;
-      margin-right: 8px;
+      width: 10px;
+      height: 10px;
+      margin-right: 4px;
       fill: #00b2ff;
     }
     
     a {
       align-items: center;
       font-weight: bold;
-      font-size: 1.1em;
-      padding: 10px 16px;
+      padding: 5px 8px;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
       transition: background 0.3s ease;
@@ -109,9 +109,9 @@
     
     footer {
       text-align: center;
-      padding: 10px;
+      padding: 5px;
       color: black;
-      font-size: 0.9rem;
+      font-size: 0.45rem;
       background: rgba(255, 255, 255, 0.7);
     }
     
@@ -122,8 +122,13 @@
     }
 
     .game-info {
-      margin-top: 20px;
+      margin-top: 10px;
       text-align: center;
+    }
+    
+    .game-info p {
+      font-size: 0.5rem;
+      margin: 2px 0;
     }
   </style>
 </head>
@@ -143,7 +148,7 @@
   <main>
     <section>
       <h2></h2>
-      <p>Игра - "КТО В ЛЕХ, КТО ПО ДРОВА?" - Прокатитесь на мотоцикле по живописным дорогам Ладакха!</p>
+      <p style="font-size: 0.6rem;">Игра - "КТО В ЛЕХ, КТО ПО ДРОВА?" - Прокатитесь на мотоцикле по живописным дорогам Ладакха!</p>
       
       <div class="game-container">
         <canvas id="canvas1"></canvas>
@@ -787,9 +792,6 @@
                     this.difficultyLevel = newDifficultyLevel;
                     // Увеличиваем модификатор скорости на 20% за каждый уровень
                     this.difficultyModifier = 1.0 + (this.difficultyLevel * 0.2);
-                    
-                    // Воспроизводим звуковой эффект или показываем сообщение
-                    console.log(`Уровень сложности повышен! Уровень: ${this.difficultyLevel}, Модификатор скорости: x${this.difficultyModifier.toFixed(2)}`);
                 }
             }
             
@@ -812,9 +814,6 @@
                 
                 this.speed *= 0.7;
                 this.player.collisionCount++;
-                
-                // УБРАЛ КОНЕЦ ИГРЫ ПРИ СТОЛКНОВЕНИИ
-                // Просто увеличиваем счетчик, но игра не заканчивается
             }
             
             // Метод для обработки пропущенных коров - игра заканчивается ТОЛЬКО здесь
@@ -854,62 +853,14 @@
                 this.player.draw(context);
                 this.background.layer4.draw(context);
                 
-                // Draw UI
+                // Draw UI (текст уменьшен в 2 раза)
                 context.fillStyle = 'white';
-                context.font = '20px Arial';
-                context.fillText(`Score: ${Math.floor(this.score)}`, 20, 30);
-                context.fillText(`Cows Hit: ${this.player.collisionCount}`, 20, 60);
-                context.fillText(`Missed: ${this.missedCows}/${this.maxMissedCows}`, 20, 90);
-                context.fillText(`Speed: x${this.difficultyModifier.toFixed(2)}`, 20, 120);
-                context.fillText(`Level: ${this.difficultyLevel}`, 20, 150);
-                
-                // ИНДИКАТОР ПРОПУЩЕННЫХ КОРОВ
-                const missedWidth = 200;
-                const missedHeight = 20;
-                const missedX = this.width - missedWidth - 20;
-                const missedY = 30;
-                
-                context.fillStyle = 'rgba(0,0,0,0.5)';
-                context.fillRect(missedX, missedY, missedWidth, missedHeight);
-                
-                const missedPercent = this.missedCows / this.maxMissedCows;
-                context.fillStyle = '#F44336';
-                context.fillRect(missedX, missedY, missedWidth * missedPercent, missedHeight);
-                context.strokeStyle = 'white';
-                context.strokeRect(missedX, missedY, missedWidth, missedHeight);
-                
-                // Подпись к индикатору пропущенных коров
-                context.fillStyle = 'white';
-                context.font = '14px Arial';
-                context.fillText('Пропущено', missedX + missedWidth - 80, 27);
-                
-                // ИНДИКАТОР СЛОЖНОСТИ
-                const difficultyWidth = 200;
-                const difficultyHeight = 20;
-                const difficultyX = this.width - difficultyWidth - 20;
-                const difficultyY = 70;
-                
-                context.fillStyle = 'rgba(0,0,0,0.5)';
-                context.fillRect(difficultyX, difficultyY, difficultyWidth, difficultyHeight);
-                
-                // Уровень сложности (максимум 5 уровней для отображения)
-                const maxDisplayLevel = 5;
-                const difficultyLevelPercent = Math.min(this.difficultyLevel / maxDisplayLevel, 1);
-                context.fillStyle = '#4CAF50';
-                context.fillRect(difficultyX, difficultyY, difficultyWidth * difficultyLevelPercent, difficultyHeight);
-                context.strokeStyle = 'white';
-                context.strokeRect(difficultyX, difficultyY, difficultyWidth, difficultyHeight);
-                
-                // Подпись к индикатору сложности
-                context.fillStyle = 'white';
-                context.font = '14px Arial';
-                context.fillText('Сложность', difficultyX + difficultyWidth - 75, difficultyY - 3);
-                
-                // Отображение информации о скорости коров
-                context.fillStyle = 'white';
-                context.font = '14px Arial';
-                context.fillText(`След. уровень через: ${100 - (Math.floor(this.score) % 100)} очков`, 
-                    this.width - 250, 110);
+                context.font = '10px Arial';
+                context.fillText(`Score: ${Math.floor(this.score)}`, 10, 15);
+                context.fillText(`Cows Hit: ${this.player.collisionCount}`, 10, 30);
+                context.fillText(`Missed: ${this.missedCows}/${this.maxMissedCows}`, 10, 45);
+                context.fillText(`Speed: x${this.difficultyModifier.toFixed(2)}`, 10, 60);
+                context.fillText(`Level: ${this.difficultyLevel}`, 10, 75);
             }
         }
         
